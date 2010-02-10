@@ -403,8 +403,7 @@ License: GPL
 	
 	function rsvp_admin_import() {
 		global $wpdb;
-		
-		if((count($_FILES) > 0) && ($_FILES['importFile']['type'] == "application/msexcel")) {
+		if(count($_FILES) > 0) {
 			check_admin_referer('rsvp-import');
 			require_once("Excel/reader.php");
 			$data = new Spreadsheet_Excel_Reader();
@@ -428,7 +427,7 @@ License: GPL
 		?>
 			<form name="rsvp_import" method="post" enctype="multipart/form-data">
 				<?php wp_nonce_field('rsvp-import'); ?>
-				<p>Select an excel file with the first name in <strong>column A</strong> and the last name in <strong>column B</strong>. A header row is not expected</p>
+				<p>Select an excel file (only xls please, xlsx is not supported....yet) with the first name in <strong>column A</strong> and the last name in <strong>column B</strong>. A header row is not expected</p>
 				<p><input type="file" name="importFile" id="importFile" /></p>
 				<p><input type="submit" value="Import File" name="goRsvp" /></p>
 			</form>
