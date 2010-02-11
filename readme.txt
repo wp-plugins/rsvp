@@ -59,6 +59,8 @@ I will see if I can get it added for you.
 
 = 0.5.1 =
 * Fixed a bug reported by Andrew Moore in the import feature that would not allow most files from being uploaded, doh!
+* Fixed a few other small warnings and gotchas (also reported by Andrew Moore)
+
 
 == Upgrade Notice ==
 To upgrade from 0.5.0 to 0.5.1 just re-upload all of the files and you should be good to go.  Really the only change was to wp-rsvp.php so uploading this changed file is all that is needed.  
