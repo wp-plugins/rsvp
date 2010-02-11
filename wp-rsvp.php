@@ -23,7 +23,7 @@ License: GPL
 #        To add, edit, delete and see rsvp status there will be a new RSVP admin
 #        area just go there.
 # 
-#        To allow people to rsvp create a new page and add "rsvp_pluginhere" to the text
+#        To allow people to rsvp create a new page and add "rsvp-pluginhere" to the text
 
 	session_start();
 	define("ATTENDEES_TABLE", $wpdb->prefix."attendees");
@@ -451,9 +451,12 @@ License: GPL
 				$wpdb->insert(ATTENDEES_TABLE, array("firstName" => trim($_POST['firstName']), "lastName" => trim($_POST['lastName'])), array('%s', '%s'));
 				$attendeeId = $wpdb->insert_id;
 			}
-			foreach($_POST['associatedAttendees'] as $aid) {
-				if(is_numeric($aid) && ($aid > 0)) {
-					$wpdb->insert(ASSOCIATED_ATTENDEES_TABLE, array("attendeeID"=>$attendeeId, "associatedAttendeeID"=>$aid), array("%d", "%d"));
+			
+			if(is_array($_POST['associatedAttendees'])) {
+				foreach($_POST['associatedAttendees'] as $aid) {
+					if(is_numeric($aid) && ($aid > 0)) {
+						$wpdb->insert(ASSOCIATED_ATTENDEES_TABLE, array("attendeeID"=>$attendeeId, "associatedAttendeeID"=>$aid), array("%d", "%d"));
+					}
 				}
 			}
 		?>
