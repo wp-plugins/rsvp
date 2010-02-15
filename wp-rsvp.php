@@ -940,22 +940,27 @@ License: GPL
 															\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"Y\\\" checked=\\\"checked\\\" /> \" + 
 																							\"<label for=\\\"newAttending\" + numAdditional + \"Y\\\">Yes</label> \" + 
 																\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"N\\\"> <label for=\\\"newAttending\" + numAdditional + \"N\\\">No</label></td>\" + 
-													\"</tr>\" + 
-													\"<tr>\" + 
+													\"</tr>\" + \r\n";
+												if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
+													$form .= "\"<tr>\" + 
 														\"<td align=\\\"left\\\">Does this person need a kids meal?&nbsp;</td> \" + 
 														\"<td align=\\\"left\\\"><input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealY\\\" /> \" + 
 																	\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealY\\\">Yes</label> \" + 
 																\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealN\\\" checked=\\\"checked\\\" /> \" + 
 																\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealN\\\">No</label></td>\" + 
-													\"</tr>\" + 
-													\"<tr>\" + 
+													\"</tr>\" + \r\n";
+												}
+												if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
+													$form .= "\"<tr>\" + \r\n
 														\"<td align=\\\"left\\\">Does this person need a vegetarian meal?&nbsp;</td> \" + 
 														\"<td align=\\\"left\\\"><input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\" /> \" + 
 																							\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\">Yes</label> \" + 
 																\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\" checked=\\\"checked\\\" /> \" + 
 																\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\">No</label></td>\" + 
-													\"</tr>\" + 
-												\"</table>\" + 
+													\"</tr>\" + ";
+												}
+												
+												$form .= "\"</table>\" + 
 												\"<br />\" + 
 											\"</div>\");
 										$(\"#additionalRsvp\").val(numAdditional);
