@@ -3,7 +3,7 @@ Contributors: mdedev
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.5
 Tested up to: 2.9.1
-Stable tag: 0.6.0
+Stable tag: 0.7.0
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -54,6 +54,9 @@ I will see if I can get it added for you.
 
 == Changelog ==
 
+= 0.7.0 =
+* Fixed a bug reported by Andrew Moore where when adding a new attendee and an option to hiding an answer the answer would still be visible
+
 = 0.6.0 =
 * Fixed a bug reported by Andrew Moore in the import feature that would not allow most files from being uploaded, doh!
 * Fixed a few other small warnings and gotchas (also reported by Andrew Moore)
@@ -62,4 +65,4 @@ I will see if I can get it added for you.
 * Initial release
 
 == Upgrade Notice ==
-To upgrade from 0.5.0 to 0.5.1 just re-upload all of the files and you should be good to go.  Really the only change was to wp-rsvp.php so uploading this changed file is all that is needed.  
+To upgrade from 0.5.0 to 0.6.0 just re-upload all of the files and you should be good to go.  Really the only change was to wp-rsvp.php so uploading this changed file is all that is needed.  
