@@ -2,8 +2,8 @@
 Contributors: mdedev
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.5
-Tested up to: 2.9.1
-Stable tag: 0.7.0
+Tested up to: 2.9.2
+Stable tag: 0.8.0
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -53,6 +53,14 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 0.8.0 =
+* Did better variable checking on the sorting functions, as warning could show up depending on the server configuration.
+* Fixed an issue with the checkbox selector in the attendee list not working in Wordpress 2.9.2
+* Added an export button to the attendee list.  When clicking this button the list will export in the same sorting order as the list
+* Added the ability to associate attendees on import
+* Added in checking when importing so names that already exist don't get imported
+* Fixed a warning when session variables were not created on the front-end greeting page
 
 = 0.7.0 =
 * Fixed a bug reported by Andrew Moore where when adding a new attendee and an option to hiding an answer the answer would still be visible

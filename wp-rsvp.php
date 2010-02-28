@@ -42,7 +42,8 @@ License: GPL
 	define("OPTION_HIDE_VEGGIE", "rsvp_hide_veggie");
 	define("OPTION_HIDE_KIDS_MEAL", "rsvp_hide_kids_meal");
 	
-	if(isset($_GET['page']) && (strToLower($_GET['page']) == 'rsvp-admin-export')) {
+	if((isset($_GET['page']) && (strToLower($_GET['page']) == 'rsvp-admin-export')) || 
+		 (isset($_POST['rsvp-bulk-action']) && (strToLower($_POST['rsvp-bulk-action']) == "export"))) {
 		add_action('init', 'rsvp_admin_export');
 	}
 	/*
@@ -195,12 +196,36 @@ License: GPL
 		}
 		$sql .= " ORDER BY ".$orderBy;
 		$attendees = $wpdb->get_results($sql);
+		$sort = "";
+		$sortDirection = "asc";
+		if(isset($_GET['sort'])) {
+			$sort = $_GET['sort'];
+		}
+		
+		if(isset($_GET['sortDirection'])) {
+			$sortDirection = $_GET['sortDirection'];
+		}
 	?>
+		<script type="text/javascript" language="javascript" 
+			src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/js/jquery-1.3.2.min.js"></script>
+		<script type="text/javascript" language="javascript">
+			$(document).ready(function() {
+				$("#cb").click(function() {
+					if($("#cb").attr("checked")) {
+						$("input[name='attendee[]']").attr("checked", "checked");
+					} else {
+						$("input[name='attendee[]']").removeAttr("checked");
+					}
+				});
+			});
+		</script>
 		<div class="wrap">	
 			<div id="icon-edit" class="icon32"><br /></div>	
 			<h2>List of current attendees</h2>
 			<form method="post" id="rsvp-form" enctype="multipart/form-data">
 				<input type="hidden" id="rsvp-bulk-action" name="rsvp-bulk-action" />
+				<input type="hidden" id="sortValue" name="sortValue" value="<?php echo htmlentities($sort, ENT_QUOTES); ?>" />
+				<input type="hidden" name="exportSortDirection" value="<?php echo htmlentities($sortDirection, ENT_QUOTES); ?>" />
 				<div class="tablenav">
 					<div class="alignleft actions">
 						<select id="rsvp-action-top" name="action">
@@ -208,6 +233,7 @@ License: GPL
 							<option value="delete"><?php _e('Delete', 'rsvp'); ?></option>
 						</select>
 						<input type="submit" value="<?php _e('Apply', 'rsvp'); ?>" name="doaction" id="doaction" class="button-secondary action" onclick="document.getElementById('rsvp-bulk-action').value = document.getElementById('rsvp-action-top').value;" />
+						<input type="submit" value="<?php _e('Export Attendees', 'rsvp'); ?>" name="exportButton" id="exportButton" class="button-secondary action" onclick="document.getElementById('rsvp-bulk-action').value = 'export';" />
 					</div>
 					<?php
 						$yesResults = $wpdb->get_results("SELECT COUNT(*) AS yesCount FROM ".ATTENDEES_TABLE." WHERE rsvpStatus = 'Yes'");
@@ -224,58 +250,58 @@ License: GPL
 			<table class="widefat post fixed" cellspacing="0">
 				<thead>
 					<tr>
-						<th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox" /></th>
+						<th scope="col" class="manage-column column-cb check-column" style=""><input type="checkbox" id="cb" /></th>
 						<th scope="col" id="attendeeName" class="manage-column column-title" style="">Attendee</a> &nbsp;
 							<a href="admin.php?page=rsvp-top-level&amp;sort=attendee&amp;sortDirection=asc">
 								<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/uparrow<?php 
-									echo ((($_GET['sort'] == "attendee") && ($_GET['sortDirection'] == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
+									echo ((($sort == "attendee") && ($sortDirection == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 									alt="Sort Ascending Attendee Status" title="Sort Ascending Attendee Status" border="0"></a> &nbsp;
 							<a href="admin.php?page=rsvp-top-level&amp;sort=attendee&amp;sortDirection=desc">
 								<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/downarrow<?php 
-									echo ((($_GET['sort'] == "attendee") && ($_GET['sortDirection'] == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
+									echo ((($sort == "attendee") && ($sortDirection == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 									alt="Sort Descending Attendee Status" title="Sort Descending Attendee Status" border="0"></a>
 						</th>			
 						<th scope="col" id="rsvpStatus" class="manage-column column-title" style="">RSVP Status &nbsp;
 							<a href="admin.php?page=rsvp-top-level&amp;sort=rsvpStatus&amp;sortDirection=asc">
 								<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/uparrow<?php 
-									echo ((($_GET['sort'] == "rsvpStatus") && ($_GET['sortDirection'] == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
+									echo ((($sort == "rsvpStatus") && ($sortDirection == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 									alt="Sort Ascending RSVP Status" title="Sort Ascending RSVP Status" border="0"></a> &nbsp;
 							<a href="admin.php?page=rsvp-top-level&amp;sort=rsvpStatus&amp;sortDirection=desc">
 								<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/downarrow<?php 
-									echo ((($_GET['sort'] == "rsvpStatus") && ($_GET['sortDirection'] == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
+									echo ((($sort == "rsvpStatus") && ($sortDirection == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 									alt="Sort Descending RSVP Status" title="Sort Descending RSVP Status" border="0"></a>
 						</th>
 						<?php if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {?>
 						<th scope="col" id="kidsMeal" class="manage-column column-title" style="">Kids Meal	 &nbsp;
 								<a href="admin.php?page=rsvp-top-level&amp;sort=kidsMeal&amp;sortDirection=asc">
 									<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/uparrow<?php 
-										echo ((($_GET['sort'] == "kidsMeal") && ($_GET['sortDirection'] == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
+										echo ((($sort == "kidsMeal") && ($sortDirection == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 										alt="Sort Ascending Kids Meal Status" title="Sort Ascending Kids Meal Status" border="0"></a> &nbsp;
 								<a href="admin.php?page=rsvp-top-level&amp;sort=kidsMeal&amp;sortDirection=desc">
 									<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/downarrow<?php 
-										echo ((($_GET['sort'] == "kidsMeal") && ($_GET['sortDirection'] == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
+										echo ((($sort == "kidsMeal") && ($sortDirection == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 										alt="Sort Descending Kids Meal Status" title="Sort Descending Kids Meal Status" border="0"></a>
 						</th>
 						<?php } ?>
 						<th scope="col" id="additionalAttendee" class="manage-column column-title" style="">Additional Attendee		 &nbsp;
 									<a href="admin.php?page=rsvp-top-level&amp;sort=additional&amp;sortDirection=asc">
 										<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/uparrow<?php 
-											echo ((($_GET['sort'] == "additional") && ($_GET['sortDirection'] == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
+											echo ((($sort == "additional") && ($sortDirection == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 											alt="Sort Ascending Additional Attendees Status" title="Sort Ascending Additional Attendees Status" border="0"></a> &nbsp;
 									<a href="admin.php?page=rsvp-top-level&amp;sort=additional&amp;sortDirection=desc">
 										<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/downarrow<?php 
-											echo ((($_GET['sort'] == "additional") && ($_GET['sortDirection'] == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
+											echo ((($sort == "additional") && ($sortDirection == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 											alt="Sort Descending Additional Attendees Status" title="Sort Descending Additional Atttendees Status" border="0"></a>
 						</th>
 						<?php if(get_option(OPTION_HIDE_VEGGIE) != "Y") {?>
 						<th scope="col" id="veggieMeal" class="manage-column column-title" style="">Vegetarian			 &nbsp;
 										<a href="admin.php?page=rsvp-top-level&amp;sort=vegetarian&amp;sortDirection=asc">
 											<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/uparrow<?php 
-												echo ((($_GET['sort'] == "vegetarian") && ($_GET['sortDirection'] == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
+												echo ((($sort == "vegetarian") && ($sortDirection == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 												alt="Sort Ascending Vegetarian Status" title="Sort Ascending Vegetarian Status" border="0"></a> &nbsp;
 										<a href="admin.php?page=rsvp-top-level&amp;sort=vegetarian&amp;sortDirection=desc">
 											<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/downarrow<?php 
-												echo ((($_GET['sort'] == "vegetarian") && ($_GET['sortDirection'] == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
+												echo ((($sort == "vegetarian") && ($sortDirection == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 												alt="Sort Descending Vegetarian Status" title="Sort Descending Vegetarian Status" border="0"></a>
 						</th>
 						<?php } ?>
@@ -350,8 +376,24 @@ License: GPL
 	function rsvp_admin_export() {
 		global $wpdb;
 			$sql = "SELECT id, firstName, lastName, rsvpStatus, note, kidsMeal, additionalAttendee, veggieMeal 
-							FROM ".ATTENDEES_TABLE.
-							" ORDER BY lastName, firstName";
+							FROM ".ATTENDEES_TABLE;
+							
+							$orderBy = " lastName, firstName";
+							if(isset($_POST['sortValue'])) {
+								if(strToLower($_POST['sortValue']) == "rsvpstatus") {
+									$orderBy = " rsvpStatus ".((strtolower($_POST['exportSortDirection']) == "desc") ? "DESC" : "ASC") .", ".$orderBy;
+								}else if(strToLower($_POST['sortValue']) == "attendee") {
+									$direction = ((strtolower($_POST['exportSortDirection']) == "desc") ? "DESC" : "ASC");
+									$orderBy = " lastName $direction, firstName $direction";
+								}	else if(strToLower($_POST['sortValue']) == "kidsmeal") {
+									$orderBy = " kidsMeal ".((strtolower($_POST['exportSortDirection']) == "desc") ? "DESC" : "ASC") .", ".$orderBy;
+								}	else if(strToLower($_POST['sortValue']) == "additional") {
+									$orderBy = " additionalAttendee ".((strtolower($_POST['exportSortDirection']) == "desc") ? "DESC" : "ASC") .", ".$orderBy;
+								}	else if(strToLower($_POST['sortValue']) == "vegetarian") {
+									$orderBy = " veggieMeal ".((strtolower($_POST['exportSortDirection']) == "desc") ? "DESC" : "ASC") .", ".$orderBy;
+								}			
+							}
+							$sql .= " ORDER BY ".$orderBy;
 			$attendees = $wpdb->get_results($sql);
 			$csv = "\"Attendee\",\"RSVP Status\",";
 			
@@ -414,8 +456,62 @@ License: GPL
 					$fName = trim($data->sheets[0]['cells'][$i][1]);
 					$lName = trim($data->sheets[0]['cells'][$i][2]);
 					if(!empty($fName) && !empty($lName)) {
-						$wpdb->insert(ATTENDEES_TABLE, array("firstName" => $fName, "lastName" => $lName), array('%s', '%s'));
-						$count++;
+						$sql = "SELECT id FROM ".ATTENDEES_TABLE." 
+						 	WHERE firstName = %s AND lastName = %s ";
+						$res = $wpdb->get_results($wpdb->prepare($sql, $fName, $lName));
+						if(count($res) == 0) {
+							$wpdb->insert(ATTENDEES_TABLE, array("firstName" => $fName, "lastName" => $lName), array('%s', '%s'));
+							$count++;
+						}
+					}
+				}
+				
+				if($data->sheets[0]['numCols'] >= 3) {
+					// There must be associated users so let's associate them
+					for ($i = 1; $i <= $data->sheets[0]['numRows']; $i++) {
+						$fName = trim($data->sheets[0]['cells'][$i][1]);
+						$lName = trim($data->sheets[0]['cells'][$i][2]);
+						if(!empty($fName) && !empty($lName) && (count($data->sheets[0]['cells'][$i]) >= 3)) {
+							// Get the user's id 
+							$sql = "SELECT id FROM ".ATTENDEES_TABLE." 
+							 	WHERE firstName = %s AND lastName = %s ";
+							$res = $wpdb->get_results($wpdb->prepare($sql, $fName, $lName));
+							if(count($res) > 0) {
+								$userId = $res[0]->id;
+								
+								// Deal with the assocaited users...
+								$associatedUsers = explode(",", trim($data->sheets[0]['cells'][$i][3]));
+								if(is_array($associatedUsers)) {
+									foreach($associatedUsers as $au) {
+										$user = explode(" ", trim($au), 2);
+										// Three cases, they didn't enter in all of the information, user exists or doesn't.  
+										// If user exists associate the two users
+										// If user does not exist add the user and then associate the two
+										if(is_array($user) && (count($user) == 2)) {
+											$sql = "SELECT id FROM ".ATTENDEES_TABLE." 
+											 	WHERE firstName = %s AND lastName = %s ";
+											$userRes = $wpdb->get_results($wpdb->prepare($sql, trim($user[0]), trim($user[1])));
+											if(count($userRes) > 0) {
+												$newUserId = $userRes[0]->id;
+											} else {
+												// Insert them and then we can associate them...
+												$wpdb->insert(ATTENDEES_TABLE, array("firstName" => trim($user[0]), "lastName" => trim($user[1])), array('%s', '%s'));
+												$newUserId = $wpdb->insert_id;
+												$count++;
+											}
+											
+											$wpdb->insert(ASSOCIATED_ATTENDEES_TABLE, array("attendeeID" => $newUserId, 
+																																			"associatedAttendeeID" => $userId), 
+																																array("%d", "%d"));
+																																
+											$wpdb->insert(ASSOCIATED_ATTENDEES_TABLE, array("attendeeID" => $userId, 
+																																			"associatedAttendeeID" => $newUserId), 
+																																array("%d", "%d"));
+										}
+									}
+								}
+							}
+						}
 					}
 				}
 			?>
@@ -427,7 +523,11 @@ License: GPL
 		?>
 			<form name="rsvp_import" method="post" enctype="multipart/form-data">
 				<?php wp_nonce_field('rsvp-import'); ?>
-				<p>Select an excel file (only xls please, xlsx is not supported....yet) with the first name in <strong>column A</strong> and the last name in <strong>column B</strong>. A header row is not expected</p>
+				<p>Select an excel file (only xls please, xlsx is not supported....yet) in the following format:<br />
+				first name in <strong>column A</strong> last name in <strong>column B</strong> and any associated attendees in <strong>Column C</strong>, 
+				associated attendees should be separated by a comma it is assumed that the first space encounted will separate the first and last name.
+				</p>
+				<p>A header row is not expected.</p>
 				<p><input type="file" name="importFile" id="importFile" /></p>
 				<p><input type="submit" value="Import File" name="goRsvp" /></p>
 			</form>
@@ -807,9 +907,10 @@ License: GPL
 								</tr>\r\n
 								<tr>\r\n
 									<td align=\"left\" colspan=\"2\"><input type=\"radio\" name=\"mainRsvp\" value=\"N\" id=\"mainRsvpN\" ".
-												(($attendee->rsvpStatus == "No") ? "checked=\"checked\"" : "")." > - 
+												(($attendee->rsvpStatus == "No") ? "checked=\"checked\"" : "")." /> - 
 												<label for=\"mainRsvpN\">".htmlentities($noVerbiage)."</label></td>
-								</tr>";		
+								</tr>
+								<tr><td><br /></td></tr>";		
 		if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
 			$form .= "	<tr><td colspan=\"2\"><hr /></td></tr>\r\n
 									<tr>\r\n
@@ -820,7 +921,8 @@ License: GPL
 										 	".(($attendee->kidsMeal == "Y") ? "checked=\"checked\"" : "")." /> <label for=\"mainKidsMealY\">Yes</label> 
 												<input type=\"radio\" name=\"mainKidsMeal\" value=\"N\" id=\"mainKidsMealN\" 
 												".(($attendee->kidsMeal == "Y") ? "" : "checked=\"checked\"")." /> <label for=\"mainKidsMealN\">No</label></td>
-									</tr>";
+									</tr>
+									<tr><td><br /></td></tr>";
 		}
 		
 		if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
@@ -876,8 +978,9 @@ License: GPL
 											<td align=\"left\">Will ".htmlentities($a->firstName)." be attending?</td>\r\n
 											<td align=\"left\"><input type=\"radio\" name=\"attending".$a->id."\" value=\"Y\" id=\"attending".$a->id."Y\" checked=\"checked\" /> 
 																				<label for=\"attending".$a->id."Y\">Yes</label> 
-													<input type=\"radio\" name=\"attending".$a->id."\" value=\"N\" id=\"attending".$a->id."N\"> <label for=\"attending".$a->id."N\">No</label></td>
-										</tr>";
+													<input type=\"radio\" name=\"attending".$a->id."\" value=\"N\" id=\"attending".$a->id."N\" /> <label for=\"attending".$a->id."N\">No</label></td>
+										</tr>
+										<tr><td><br /></td></tr>";
 				
 				if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
 					$form .= "	<tr>
@@ -886,7 +989,8 @@ License: GPL
 																					<label for=\"attending".$a->id."KidsMealY\">Yes</label> 
 														<input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"N\" id=\"attending".$a->id."KidsMealN\" checked=\"checked\" /> 
 														<label for=\"attending".$a->id."KidsMealN\">No</label></td>
-											</tr>";
+											</tr>
+											<tr><td><br /></td></tr>";
 				}
 				
 				if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
@@ -992,6 +1096,14 @@ License: GPL
 	function rsvp_frontend_greeting() {
 		$customGreeting = get_option(OPTION_GREETING);
 		$output = "<p>Please enter your first and last name to RSVP.</p>";
+		$firstName = "";
+		$lastName = "";
+		if(isset($_SESSION['rsvpFirstName'])) {
+			$firstName = $_SESSION['rsvpFirstName'];
+		}
+		if(isset($_SESSION['rsvpLastName'])) {
+			$lastName = $_SESSION['rsvpLastName'];
+		}
 		if(!empty($customGreeting)) {
 			$output = nl2br($customGreeting);
 		} 
@@ -1005,9 +1117,9 @@ License: GPL
 		$output .= "<form name=\"rsvp\" method=\"post\" id=\"rsvp\">\r\n";
 		$output .= "	<input type=\"hidden\" name=\"rsvpStep\" value=\"find\" />";
 		$output .= "<p><label for=\"firstName\">First Name:</label> 
-									 <input type=\"text\" name=\"firstName\" id=\"firstName\" size=\"30\" value=\"".htmlentities($_SESSION['rsvpFirstName'])."\" class=\"required\" /></p>\r\n";
+									 <input type=\"text\" name=\"firstName\" id=\"firstName\" size=\"30\" value=\"".htmlentities($firstName)."\" class=\"required\" /></p>\r\n";
 		$output .= "<p><label for=\"lastName\">Last Name:</label> 
-									 <input type=\"text\" name=\"lastName\" id=\"lastName\" size=\"30\" value=\"".htmlentities($_SESSION['rsvpLastName'])."\" class=\"required\" /></p>\r\n";
+									 <input type=\"text\" name=\"lastName\" id=\"lastName\" size=\"30\" value=\"".htmlentities($lastName)."\" class=\"required\" /></p>\r\n";
 		$output .= "<p><input type=\"submit\" value=\"Register\" /></p>";
 		$output .= "</form>\r\n";
 		
