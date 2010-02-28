@@ -10,7 +10,7 @@ Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 0.5.0
+Version: 0.8.0
 Author URI: http://mde-dev.com
 License: GPL
 */
