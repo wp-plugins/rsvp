@@ -1,9 +1,9 @@
 === RSVP Plugin ===
 Contributors: mdedev
 Tags: rsvp, reserve, wedding, guestlist
-Requires at least: 2.5
+Requires at least: 2.7
 Tested up to: 2.9.2
-Stable tag: 0.8.0
+Stable tag: 0.9.0
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
