@@ -1,9 +1,9 @@
 === RSVP Plugin ===
 Contributors: mdedev
 Tags: rsvp, reserve, wedding, guestlist
-Requires at least: 2.5
+Requires at least: 2.7
 Tested up to: 2.9.2
-Stable tag: 0.8.0
+Stable tag: 0.9.0
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -54,6 +54,11 @@ I will see if I can get it added for you.
 
 == Changelog ==
 
+= 0.9.0 = 
+* Fixed the options page so it works in MU switched from the old options way with using the newer methods that are only for 2.7+.
+* Added the option of custom messages for each attendee. 
+* Small bug-fixed and code refactoring that I noticed while testing.
+
 = 0.8.0 =
 * Did better variable checking on the sorting functions, as warning could show up depending on the server configuration.
 * Fixed an issue with the checkbox selector in the attendee list not working in Wordpress 2.9.2
@@ -73,4 +78,5 @@ I will see if I can get it added for you.
 * Initial release
 
 == Upgrade Notice ==
-To upgrade from 0.5.0 to 0.6.0 just re-upload all of the files and you should be good to go.  Really the only change was to wp-rsvp.php so uploading this changed file is all that is needed.  
+* To upgrade from 0.5.0 to 0.6.0 just re-upload all of the files and you should be good to go.  Really the only change was to wp-rsvp.php so uploading this changed file is all that is needed.  
+* To upgrade to 0.9.0 at minimum copy over wp-rsvp.php and rsvp_frontend.inc.php and go to the attendeees list.  Preferably deactive and reactivate the plugin so it is for sure that the database changes happen. 
