@@ -24,7 +24,8 @@ The admin functionality allows you to do the following things:
 * Specify the vegetarian meal verbiage 
 * Specify the text for the note question
 * Enter in a custom thank you
-* Import a guest list from an excel sheet (column #1 is the first name, column #2 is the last name)
+* Create a custom message / greeting for each guest
+* Import a guest list from an excel sheet (column #1 is the first name, column #2 is the last name, column #3 associated attendees, column #4 custom greeting)
 * Export the guest list
 * Add, edit and delete guests
 * Associate guests with other guests

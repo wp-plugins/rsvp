@@ -195,7 +195,7 @@ License: GPL
 			}
 		}
 		
-		$sql = "SELECT id, firstName, lastName, rsvpStatus, note, kidsMeal, additionalAttendee, veggieMeal FROM ".ATTENDEES_TABLE;
+		$sql = "SELECT id, firstName, lastName, rsvpStatus, note, kidsMeal, additionalAttendee, veggieMeal, personalGreeting FROM ".ATTENDEES_TABLE;
 		$orderBy = " lastName, firstName";
 		if(isset($_GET['sort'])) {
 			if(strToLower($_GET['sort']) == "rsvpstatus") {
@@ -322,6 +322,7 @@ License: GPL
 												alt="Sort Descending Vegetarian Status" title="Sort Descending Vegetarian Status" border="0"></a>
 						</th>
 						<?php } ?>
+						<th scope="col" id="note" class="manage-column column-title" style="">Custom Message</th>
 						<th scope="col" id="note" class="manage-column column-title" style="">Note</th>
 						<th scope="col" id="associatedAttendees" class="manage-column column-title" style="">Associated Attendees</th>
 					</tr>
@@ -363,6 +364,9 @@ License: GPL
 								}	
 									?></td>
 							<?php } ?>
+							<td><?php
+								echo nl2br(stripslashes(trim($attendee->personalGreeting)));
+							?></td>
 							<td><?php
 								echo nl2br(stripslashes(trim($attendee->note)));
 							?></td>
