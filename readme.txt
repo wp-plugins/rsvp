@@ -3,7 +3,7 @@ Contributors: mdedev
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.7
 Tested up to: 2.9.2
-Stable tag: 0.9.0
+Stable tag: 0.9.5
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -54,6 +54,9 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 0.9.5 =
+* Fixed a major bug that would not create the correct sql tables during initial install, thanks to everyone for letting me know. 
 
 = 0.9.0 = 
 * Fixed the options page so it works in MU switched from the old options way with using the newer methods that are only for 2.7+.
