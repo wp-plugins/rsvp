@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 0.9.0
+ * @version 0.9.5
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 0.9.0
+Version: 0.9.5
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -57,37 +57,35 @@ License: GPL
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		
 		$installed_ver = get_option("rsvp_db_version");
-		if(empty($installed_ver)) {
-			$table = $wpdb->prefix."attendees";
-			if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
-				$sql = "CREATE TABLE ".$table." (
-				`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-				`firstName` VARCHAR( 100 ) NOT NULL ,
-				`lastName` VARCHAR( 100 ) NOT NULL ,
-				`rsvpDate` DATE NOT NULL ,
-				`rsvpStatus` ENUM( 'Yes', 'No', 'NoResponse' ) NOT NULL DEFAULT 'NoResponse',
-				`note` TEXT NOT NULL ,
-				`kidsMeal` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N',
-				`additionalAttendee` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N',
-				`veggieMeal` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N', 
-				`personalGreeting` TEXT NOT NULL , 
-				);";
-				dbDelta($sql);
-			}
-			$table = $wpdb->prefix."associatedAttendees";
-			if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
-				$sql = "CREATE TABLE ".$table." (
-				`attendeeID` INT NOT NULL ,
-				`associatedAttendeeID` INT NOT NULL
-				);";
-				dbDelta($sql);
-				$sql = "ALTER TABLE `".$table."` ADD INDEX ( `attendeeID` ) ";
-				dbDelta($sql);
-				$sql = "ALTER TABLE `".$table."` ADD INDEX ( `associatedAttendeeID` )";
-				dbDelta($sql);
-			}				
-			add_option("rsvp_db_version", "1.0");
+		$table = $wpdb->prefix."attendees";
+		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
+			$sql = "CREATE TABLE ".$table." (
+			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+			`firstName` VARCHAR( 100 ) NOT NULL ,
+			`lastName` VARCHAR( 100 ) NOT NULL ,
+			`rsvpDate` DATE NOT NULL ,
+			`rsvpStatus` ENUM( 'Yes', 'No', 'NoResponse' ) NOT NULL DEFAULT 'NoResponse',
+			`note` TEXT NOT NULL ,
+			`kidsMeal` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N',
+			`additionalAttendee` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N',
+			`veggieMeal` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N', 
+			`personalGreeting` TEXT NOT NULL 
+			);";
+			$wpdb->query($sql);
 		}
+		$table = $wpdb->prefix."associatedAttendees";
+		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
+			$sql = "CREATE TABLE ".$table." (
+			`attendeeID` INT NOT NULL ,
+			`associatedAttendeeID` INT NOT NULL
+			);";
+			$wpdb->query($sql);
+			$sql = "ALTER TABLE `".$table."` ADD INDEX ( `attendeeID` ) ";
+			$wpdb->query($sql);
+			$sql = "ALTER TABLE `".$table."` ADD INDEX ( `associatedAttendeeID` )";
+			$wpdb->query($sql);
+		}				
+		add_option("rsvp_db_version", "1.0");
 		
 		if((int)$installed_ver < 2) {
 			$table = $wpdb->prefix."attendees";
@@ -195,7 +193,7 @@ License: GPL
 			}
 		}
 		
-		$sql = "SELECT id, firstName, lastName, rsvpStatus, note, kidsMeal, additionalAttendee, veggieMeal FROM ".ATTENDEES_TABLE;
+		$sql = "SELECT id, firstName, lastName, rsvpStatus, note, kidsMeal, additionalAttendee, veggieMeal, personalGreeting FROM ".ATTENDEES_TABLE;
 		$orderBy = " lastName, firstName";
 		if(isset($_GET['sort'])) {
 			if(strToLower($_GET['sort']) == "rsvpstatus") {
@@ -322,6 +320,7 @@ License: GPL
 												alt="Sort Descending Vegetarian Status" title="Sort Descending Vegetarian Status" border="0"></a>
 						</th>
 						<?php } ?>
+						<th scope="col" id="note" class="manage-column column-title" style="">Custom Message</th>
 						<th scope="col" id="note" class="manage-column column-title" style="">Note</th>
 						<th scope="col" id="associatedAttendees" class="manage-column column-title" style="">Associated Attendees</th>
 					</tr>
@@ -363,6 +362,9 @@ License: GPL
 								}	
 									?></td>
 							<?php } ?>
+							<td><?php
+								echo nl2br(stripslashes(trim($attendee->personalGreeting)));
+							?></td>
 							<td><?php
 								echo nl2br(stripslashes(trim($attendee->note)));
 							?></td>
