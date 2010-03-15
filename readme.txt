@@ -3,7 +3,7 @@ Contributors: mdedev
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.7
 Tested up to: 2.9.2
-Stable tag: 0.9.5
+Stable tag: 1.0.0
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -29,6 +29,8 @@ The admin functionality allows you to do the following things:
 * Export the guest list
 * Add, edit and delete guests
 * Associate guests with other guests
+* Create custom questions that can be asked by each attendee
+* Specify email notifications to happen whenever someone rsvps
 
 If there are any improvements or modifications you would like to see in the plugin please feel free to contact me at (mike AT mde DASH dev.com) and 
 I will see if I can get them into the plugin for you.  
@@ -54,6 +56,12 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.0.0 =
+* Removed some default text that pointed to my wedding site, doh.
+* Created the ability to not allow additional attendees be added
+* Created the ability to be notified via email whenever someone rsvps
+* Added the ability to specify custom questions for each rsvp.  
 
 = 0.9.5 =
 * Fixed a major bug that would not create the correct sql tables during initial install, thanks to everyone for letting me know. 
@@ -84,3 +92,4 @@ I will see if I can get it added for you.
 == Upgrade Notice ==
 * To upgrade from 0.5.0 to 0.6.0 just re-upload all of the files and you should be good to go.  Really the only change was to wp-rsvp.php so uploading this changed file is all that is needed.  
 * To upgrade to 0.9.0 at minimum copy over wp-rsvp.php and rsvp_frontend.inc.php and go to the attendeees list.  Preferably deactive and reactivate the plugin so it is for sure that the database changes happen. 
+* To upgrade to 1.0.0 at minimum copy over wp-rsvp.php and rsvp_frontend.inc.php and deactive and reactivate the plugin to get the latest database changes.  

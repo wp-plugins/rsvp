@@ -17,6 +17,7 @@ function rsvp_frontend_handler($text) {
 	}
 	
 	if(isset($_POST['rsvpStep'])) {
+		$output = "";
 		switch(strtolower($_POST['rsvpStep'])) {
 			case("handlersvp") :
 				if(is_numeric($_POST['attendeeID']) && ($_POST['attendeeID'] > 0)) {
@@ -30,11 +31,14 @@ function rsvp_frontend_handler($text) {
 					$wpdb->update(ATTENDEES_TABLE, array("rsvpDate" => date("Y-m-d"), 
 																							 "rsvpStatus" => $rsvpStatus, 
 																							 "note" => $_POST['note'], 
-																							 "kidsMeal" => ((strToUpper($_POST['mainKidsMeal']) == "Y") ? "Y" : "N"), 
-																							 "veggieMeal" => ((strToUpper($_POST['mainVeggieMeal']) == "Y") ? "Y" : "N")), 
+																							 "kidsMeal" => ((isset($_POST['mainKidsMeal']) && (strToUpper($_POST['mainKidsMeal']) == "Y")) ? "Y" : "N"), 
+																							 "veggieMeal" => ((isset($_POST['mainVeggieMeal']) && (strToUpper($_POST['mainVeggieMeal']) == "Y")) ? "Y" : "N")), 
 																				array("id" => $attendeeID), 
 																				array("%s", "%s", "%s", "%s", "%s"), 
 																				array("%d"));
+																				
+					rsvp_handleAdditionalQuestions($attendeeID, "mainquestion");
+																				
 					$sql = "SELECT id FROM ".ATTENDEES_TABLE." 
 					 	WHERE (id IN (SELECT attendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE associatedAttendeeID = %d) 
 							OR id in (SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeID = %d)) 
@@ -49,37 +53,53 @@ function rsvp_frontend_handler($text) {
 							}
 							$wpdb->update(ATTENDEES_TABLE, array("rsvpDate" => date("Y-m-d"), 
 																									 "rsvpStatus" => $rsvpStatus, 
-																									  "kidsMeal" => ((strToUpper($_POST['attending'.$a->id.'KidsMeal']) == "Y") ? "Y" : "N"), 
-																									  "veggieMeal" => ((strToUpper($_POST['attending'.$a->id.'VeggieMeal']) == "Y") ? "Y" : "N")),
+																									  "kidsMeal" => ((strToUpper((isset($_POST['attending'.$a->id.'KidsMeal']) ? $_POST['attending'.$a->id.'KidsMeal'] : "N")) == "Y") ? "Y" : "N"), 
+																									  "veggieMeal" => ((strToUpper((isset($_POST['attending'.$a->id.'VeggieMeal']) ? $_POST['attending'.$a->id.'VeggieMeal'] : "N")) == "Y") ? "Y" : "N")),
 																						 array("id" => $a->id), 
 																						 array("%s", "%s", "%s", "%s"), 
 																						 array("%d"));
+							rsvp_handleAdditionalQuestions($a->id, $a->id."question");
 						}
 					}
 					
-					if(is_numeric($_POST['additionalRsvp']) && ($_POST['additionalRsvp'] > 0)) {
-						for($i = 1; $i <= $_POST['additionalRsvp']; $i++) {
-							if(($i <= 3) && 
-							   !empty($_POST['newAttending'.$i.'FirstName']) && 
-							   !empty($_POST['newAttending'.$i.'LastName'])) {									
-								$wpdb->insert(ATTENDEES_TABLE, array("firstName" => trim($_POST['newAttending'.$i.'FirstName']), 
-																										 "lastName" => trim($_POST['newAttending'.$i.'LastName']), 
-																										 "rsvpDate" => date("Y-m-d"), 
-																										 "rsvpStatus" => (($_POST['newAttending'.$i] == "Y") ? "Yes" : "No"), 
-																										 "kidsMeal" => $_POST['newAttending'.$i.'KidsMeal'], 
-																										 "veggieMeal" => $_POST['newAttending'.$i.'VeggieMeal'], 
-																										 "additionalAttendee" => "Y"), 
-																							array('%s', '%s', '%s', '%s', '%s', '%s'));
-								$newAid = $wpdb->insert_id;
-								// Add associations for this new user
-								$wpdb->insert(ASSOCIATED_ATTENDEES_TABLE, array("attendeeID" => $newAid, 
-																																"associatedAttendeeID" => $attendeeID), 
-																													array("%d", "%d"));
-								$wpdb->query($wpdb->prepare("INSERT INTO ".ASSOCIATED_ATTENDEES_TABLE."(attendeeID, associatedAttendeeID)
-																						 SELECT ".$newAid.", associatedAttendeeID 
-																						 FROM ".ASSOCIATED_ATTENDEES_TABLE." 
-																						 WHERE attendeeID = ".$attendeeID));
+					if(get_option(OPTION_HIDE_ADD_ADDITIONAL) != "Y") {
+						if(is_numeric($_POST['additionalRsvp']) && ($_POST['additionalRsvp'] > 0)) {
+							for($i = 1; $i <= $_POST['additionalRsvp']; $i++) {
+								if(($i <= 3) && 
+								   !empty($_POST['newAttending'.$i.'FirstName']) && 
+								   !empty($_POST['newAttending'.$i.'LastName'])) {									
+									$wpdb->insert(ATTENDEES_TABLE, array("firstName" => trim($_POST['newAttending'.$i.'FirstName']), 
+																											 "lastName" => trim($_POST['newAttending'.$i.'LastName']), 
+																											 "rsvpDate" => date("Y-m-d"), 
+																											 "rsvpStatus" => (($_POST['newAttending'.$i] == "Y") ? "Yes" : "No"), 
+																											 "kidsMeal" => (isset($_POST['newAttending'.$i.'KidsMeal']) ? $_POST['newAttending'.$i.'KidsMeal'] : "N"), 
+																											 "veggieMeal" => (isset($_POST['newAttending'.$i.'VeggieMeal']) ? $_POST['newAttending'.$i.'VeggieMeal'] : "N"), 
+																											 "additionalAttendee" => "Y"), 
+																								array('%s', '%s', '%s', '%s', '%s', '%s'));
+									$newAid = $wpdb->insert_id;
+									rsvp_handleAdditionalQuestions($newAid, $i.'question');
+									// Add associations for this new user
+									$wpdb->insert(ASSOCIATED_ATTENDEES_TABLE, array("attendeeID" => $newAid, 
+																																	"associatedAttendeeID" => $attendeeID), 
+																														array("%d", "%d"));
+									$wpdb->query($wpdb->prepare("INSERT INTO ".ASSOCIATED_ATTENDEES_TABLE."(attendeeID, associatedAttendeeID)
+																							 SELECT ".$newAid.", associatedAttendeeID 
+																							 FROM ".ASSOCIATED_ATTENDEES_TABLE." 
+																							 WHERE attendeeID = ".$attendeeID));
+								}
 							}
+						}
+					}
+					
+					if((get_option(OPTION_NOTIFY_ON_RSVP) == "Y") && (get_option(OPTION_NOTIFY_EMAIL) != "")) {
+						$sql = "SELECT firstName, lastName FROM ".ATTENDEES_TABLE." WHERE id= ".$attendeeID;
+						$attendee = $wpdb->get_results($sql);
+						if(count($attendee) > 0) {
+							$body = "Hello, \r\n\r\n";
+							
+							$body .= stripslashes($attendee[0]->firstName)." ".stripslashes($attendee[0]->lastName)." has submitted their rsvp.";
+							
+							wp_mail(get_option(OPTION_NOTIFY_EMAIL), "New RSVP Submission", $body);
 						}
 					}
 					
@@ -190,6 +210,57 @@ function rsvp_frontend_handler($text) {
 	}
 }
 
+function rsvp_handleAdditionalQuestions($attendeeID, $formName) {
+	global $wpdb;
+	
+	$wpdb->query($wpdb->prepare("DELETE FROM ".ATTENDEE_ANSWERS." WHERE attendeeID = %d ", $attendeeID));
+	
+	$qRs = $wpdb->get_results("SELECT q.id, questionType FROM ".QUESTIONS_TABLE." q 
+					INNER JOIN ".QUESTION_TYPE_TABLE." qt ON qt.id = q.questionTypeID");
+	if(count($qRs) > 0) {
+		foreach($qRs as $q) {
+			if(isset($_POST[$formName.$q->id]) && !empty($_POST[$formName.$q->id])) {
+				if($q->questionType == QT_MULTI) {
+					$selectedAnswers = "";
+					$aRs = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $q->id));
+					if(count($aRs) > 0) {
+						foreach($aRs as $a) {
+							if(in_array($a->id, $_POST[$formName.$q->id])) {
+								$selectedAnswers .= ((strlen($selectedAnswers) == "0") ? "" : ",").stripslashes($a->answer);
+							}
+						}
+					}
+					
+					if(!empty($selectedAnswers)) {
+						$wpdb->insert(ATTENDEE_ANSWERS, array("attendeeID" => $attendeeID, 
+																									 "answer" => stripslashes($selectedAnswers), 
+																									 "questionID" => $q->id), 
+																						 array('%d', '%s', '%d'));
+					}
+				} else if ($q->questionType == QT_DROP) {
+					$aRs = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $q->id));
+					if(count($aRs) > 0) {
+						foreach($aRs as $a) {
+							if($a->id == $_POST[$formName.$q->id]) {
+								$wpdb->insert(ATTENDEE_ANSWERS, array("attendeeID" => $attendeeID, 
+																											 "answer" => stripslashes($a->answer), 
+																											 "questionID" => $q->id), 
+																								 array('%d', '%s', '%d'));
+								break;
+							}
+						}
+					}
+				} else {
+					$wpdb->insert(ATTENDEE_ANSWERS, array("attendeeID" => $attendeeID, 
+																								 "answer" => $_POST[$formName.$q->id], 
+																								 "questionID" => $q->id), 
+																					 array('%d', '%s', '%d'));
+				}
+			}
+		}
+	}
+}
+
 function rsvp_frontend_prompt_to_edit($attendee) {
 	$prompt = "<p>Hi ".htmlentities($attendee->firstName." ".$attendee->lastName)." it looks like you have already RSVP'd. 
 								Would you like to edit your reservation?</p>";
@@ -265,18 +336,18 @@ function rsvp_frontend_main_form($attendeeID) {
 	$veggieVerbiage = ((trim(get_option(OPTION_VEGGIE_MEAL_VERBIAGE)) != "") ? get_option(OPTION_VEGGIE_MEAL_VERBIAGE) : 
 					"We also have the option of getting individual vegetarian meals instead of the fish or meat.  Would you like a vegetarian dinner?");
 	$noteVerbiage = ((trim(get_option(OPTION_NOTE_VERBIAGE)) != "") ? get_option(OPTION_NOTE_VERBIAGE) : 
-		"If you have any <strong style=\"color:red;\">food allergies</strong>, please indicate what they are in the &quot;notes&quot; section below.  Or, if you just want to send us a note, please feel free.  If you have any questions, please send us an email at <a href=\"mailto:rsvp@janaandmike.com\">rsvp@janaandmike.com</a>.");
+		"If you have any <strong style=\"color:red;\">food allergies</strong>, please indicate what they are in the &quot;notes&quot; section below.  Or, if you just want to send us a note, please feel free.  If you have any questions, please send us an email.");
 	$form .= "  <tr>\r\n
 								<td align=\"left\">So, how about it?</td>
 							</tr>\r\n
 							<tr>\r\n
 								<td colspan=\"2\" align=\"left\"><input type=\"radio\" name=\"mainRsvp\" value=\"Y\" id=\"mainRsvpY\" ".
-									(($attendee->rsvpStatus == "No") ? "" : "checked=\"checked\"")." /> - <label for=\"mainRsvpY\">".htmlentities($yesVerbiage)."</label></td>
+									(($attendee->rsvpStatus == "No") ? "" : "checked=\"checked\"")." /> - <label for=\"mainRsvpY\">".$yesVerbiage."</label></td>
 							</tr>\r\n
 							<tr>\r\n
 								<td align=\"left\" colspan=\"2\"><input type=\"radio\" name=\"mainRsvp\" value=\"N\" id=\"mainRsvpN\" ".
 											(($attendee->rsvpStatus == "No") ? "checked=\"checked\"" : "")." /> - 
-											<label for=\"mainRsvpN\">".htmlentities($noVerbiage)."</label></td>
+											<label for=\"mainRsvpN\">".$noVerbiage."</label></td>
 							</tr>
 							<tr><td><br /></td></tr>";		
 	if(!empty($attendee->personalGreeting)) {
@@ -289,7 +360,7 @@ function rsvp_frontend_main_form($attendeeID) {
 	if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
 		$form .= "	<tr><td colspan=\"2\"><hr /></td></tr>\r\n
 								<tr>\r\n
-									<td colspan=\"2\" align=\"left\">".htmlentities($kidsVerbiage)."</td>
+									<td colspan=\"2\" align=\"left\">".$kidsVerbiage."</td>
 								</tr>\r\n
 								<tr>\r\n
 									<td align=\"center\" colspan=\"2\"><input type=\"radio\" name=\"mainKidsMeal\" value=\"Y\" id=\"mainKidsMealY\" 
@@ -303,7 +374,7 @@ function rsvp_frontend_main_form($attendeeID) {
 	if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
 		$form .= "	<tr><td colspan=\"2\"><hr /></td></tr>\r\n
 								<tr>\r\n
-									<td align=\"left\" colspan=\"2\">".htmlentities($veggieVerbiage)."</td> 
+									<td align=\"left\" colspan=\"2\">".$veggieVerbiage."</td> 
 								</tr>\r\n
 								<tr>\r\n
 									<td align=\"center\" colspan=\"2\"><input type=\"radio\" name=\"mainVeggieMeal\" value=\"Y\" id=\"mainVeggieMealY\"
@@ -313,12 +384,15 @@ function rsvp_frontend_main_form($attendeeID) {
 								</tr>\r\n";
 	}
 	
+	$form .= rsvp_buildAdditionalQuestions($attendeeID, "main");
+	
+	
 	$form .= " <tr><td><br /></td></tr>\r\n
 						 <tr>
 								<td valign=\"top\" align=\"left\" colspan=\"2\">".$noteVerbiage."</td>
 							</tr>
 							<tr>
-								<td colspan=\"2\"><textarea name=\"note\" id=\"note\" rows=\"7\" cols=\"50\">".htmlentities($attendee->note)."</textarea></td>
+								<td colspan=\"2\"><textarea name=\"note\" id=\"note\" rows=\"7\" cols=\"50\">".$attendee->note."</textarea></td>
 						 </tr>";
 	$form .= "</table>\r\n";
 	
@@ -384,78 +458,161 @@ function rsvp_frontend_main_form($attendeeID) {
 													<label for=\"attending".$a->id."VeggieMealN\">No</label></td>
 										</tr>";
 			}
+			
+			$form .= rsvp_buildAdditionalQuestions($a->id, $a->id);
 			$form .= "</table>\r\n";
 			$form .= "</div>\r\n";
 		}
 	}
-	$form .= "<h3>Did we slip up and forget to invite someone? If so, please add him or her here:</h3>\r\n";
-	$form .= "<div id=\"additionalRsvpContainer\">\r\n
-							<input type=\"hidden\" name=\"additionalRsvp\" id=\"additionalRsvp\" value=\"".count($newRsvps)."\" />
-							<div style=\"text-align:right\"><img 
-								src=\"".get_option("siteurl")."/wp-content/plugins/rsvp/plus.png\" width=\"24\" height=\"24\" border=\"0\" id=\"addRsvp\" /></div>
 	
-						</div>";
+	if(get_option(OPTION_HIDE_ADD_ADDITIONAL) != "Y") {
+		$form .= "<h3>Did we slip up and forget to invite someone? If so, please add him or her here:</h3>\r\n";
+		$form .= "<div id=\"additionalRsvpContainer\">\r\n
+								<input type=\"hidden\" name=\"additionalRsvp\" id=\"additionalRsvp\" value=\"".count($newRsvps)."\" />
+								<div style=\"text-align:right\"><img 
+									src=\"".get_option("siteurl")."/wp-content/plugins/rsvp/plus.png\" width=\"24\" height=\"24\" border=\"0\" id=\"addRsvp\" /></div>
+	
+							</div>";
+	}
 						
 	$form .= "<p><input type=\"submit\" value=\"RSVP\" /></p>\r\n";
-	$form .= "<script type=\"text/javascript\" language=\"javascript\">\r\n
-							$(document).ready(function() {
-								$(\"#addRsvp\").click(function() {
-									handleAddRsvpClick();
+	if(get_option(OPTION_HIDE_ADD_ADDITIONAL) != "Y") {
+		$form .= "<script type=\"text/javascript\" language=\"javascript\">\r\n
+								$(document).ready(function() {
+									$(\"#addRsvp\").click(function() {
+										handleAddRsvpClick();
+									});
 								});
-							});
 							
-							function handleAddRsvpClick() {
-								var numAdditional = $(\"#additionalRsvp\").val();
-								numAdditional++;
-								if(numAdditional > 3) {
-									alert('You have already added 3 additional rsvp\'s you can add no more.');
-								} else {
-									$(\"#additionalRsvpContainer\").append(\"<div style=\\\"text-align:left;border-top: 1px solid;\\\">\" + \r\n
-											\"<table cellpadding=\\\"2\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\" + \r\n
-												\"<tr>\" + \r\n
-												\"	<td align=\\\"left\\\">Person's first name&nbsp;</td>\" + \r\n 
-												\"  <td align=\\\"left\\\"><input type=\\\"text\\\" name=\\\"newAttending\" + numAdditional + \"FirstName\\\" id=\\\"newAttending\" + numAdditional + \"FirstName\\\" /></td>\" + \r\n
-									  		\"</tr>\" + \r\n
-												\"<tr>\" + \r\n
-												\"	<td align=\\\"left\\\">Person's last name</td>\" + \r\n 
-												\"  <td align=\\\"left\\\"><input type=\\\"text\\\" name=\\\"newAttending\" + numAdditional + \"LastName\\\" id=\\\"newAttending\" + numAdditional + \"LastName\\\" /></td>\" + \r\n
-												\"</tr>\" + \r\n
-									  		\"<tr>\" + \r\n
-													\"<td align=\\\"left\\\">Will this person be attending?&nbsp;</td>\" + \r\n
-													\"<td align=\\\"left\\\">\" + 
-														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"Y\\\" checked=\\\"checked\\\" /> \" + 
-																						\"<label for=\\\"newAttending\" + numAdditional + \"Y\\\">Yes</label> \" + 
-															\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"N\\\"> <label for=\\\"newAttending\" + numAdditional + \"N\\\">No</label></td>\" + 
-												\"</tr>\" + \r\n";
-											if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
-												$form .= "\"<tr>\" + 
-													\"<td align=\\\"left\\\">Does this person need a kids meal?&nbsp;</td> \" + 
-													\"<td align=\\\"left\\\"><input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealY\\\" /> \" + 
-																\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealY\\\">Yes</label> \" + 
-															\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealN\\\" checked=\\\"checked\\\" /> \" + 
-															\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealN\\\">No</label></td>\" + 
-												\"</tr>\" + \r\n";
-											}
-											if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
-												$form .= "\"<tr>\" + \r\n
-													\"<td align=\\\"left\\\">Does this person need a vegetarian meal?&nbsp;</td> \" + 
-													\"<td align=\\\"left\\\"><input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\" /> \" + 
-																						\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\">Yes</label> \" + 
-															\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\" checked=\\\"checked\\\" /> \" + 
-															\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\">No</label></td>\" + 
-												\"</tr>\" + ";
-											}
+								function handleAddRsvpClick() {
+									var numAdditional = $(\"#additionalRsvp\").val();
+									numAdditional++;
+									if(numAdditional > 3) {
+										alert('You have already added 3 additional rsvp\'s you can add no more.');
+									} else {
+										$(\"#additionalRsvpContainer\").append(\"<div style=\\\"text-align:left;border-top: 1px solid;\\\">\" + \r\n
+												\"<table cellpadding=\\\"2\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\" + \r\n
+													\"<tr>\" + \r\n
+													\"	<td align=\\\"left\\\">Person's first name&nbsp;</td>\" + \r\n 
+													\"  <td align=\\\"left\\\"><input type=\\\"text\\\" name=\\\"newAttending\" + numAdditional + \"FirstName\\\" id=\\\"newAttending\" + numAdditional + \"FirstName\\\" /></td>\" + \r\n
+										  		\"</tr>\" + \r\n
+													\"<tr>\" + \r\n
+													\"	<td align=\\\"left\\\">Person's last name</td>\" + \r\n 
+													\"  <td align=\\\"left\\\"><input type=\\\"text\\\" name=\\\"newAttending\" + numAdditional + \"LastName\\\" id=\\\"newAttending\" + numAdditional + \"LastName\\\" /></td>\" + \r\n
+													\"</tr>\" + \r\n
+										  		\"<tr>\" + \r\n
+														\"<td align=\\\"left\\\">Will this person be attending?&nbsp;</td>\" + \r\n
+														\"<td align=\\\"left\\\">\" + 
+															\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"Y\\\" checked=\\\"checked\\\" /> \" + 
+																							\"<label for=\\\"newAttending\" + numAdditional + \"Y\\\">Yes</label> \" + 
+																\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"N\\\"> <label for=\\\"newAttending\" + numAdditional + \"N\\\">No</label></td>\" + 
+													\"</tr>\" + \r\n";
+												if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
+													$form .= "\"<tr>\" + 
+														\"<td align=\\\"left\\\">Does this person need a kids meal?&nbsp;</td> \" + 
+														\"<td align=\\\"left\\\"><input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealY\\\" /> \" + 
+																	\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealY\\\">Yes</label> \" + 
+																\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealN\\\" checked=\\\"checked\\\" /> \" + 
+																\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealN\\\">No</label></td>\" + 
+													\"</tr>\" + \r\n";
+												}
+												if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
+													$form .= "\"<tr>\" + \r\n
+														\"<td align=\\\"left\\\">Does this person need a vegetarian meal?&nbsp;</td> \" + 
+														\"<td align=\\\"left\\\"><input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\" /> \" + 
+																							\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\">Yes</label> \" + 
+																\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\" checked=\\\"checked\\\" /> \" + 
+																\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\">No</label></td>\" + 
+													\"</tr>\" + ";
+												}
+												$form .= "\"".str_replace("\r\n", "", str_replace("|", "\"", addSlashes(rsvp_buildAdditionalQuestions(0, "| + numAdditional + |"))))."\" + ";
 											
-											$form .= "\"</table>\" + 
-											\"<br />\" + 
-										\"</div>\");
-									$(\"#additionalRsvp\").val(numAdditional);
+												$form .= "\"</table>\" + 
+												\"<br />\" + 
+											\"</div>\");
+										$(\"#additionalRsvp\").val(numAdditional);
+									}
 								}
-							}
-						</script>\r\n";
+							</script>\r\n";
+	}
 	$form .= "</form>\r\n";
 	
 	return $form;
+}
+
+function rsvp_revtrievePreviousAnswer($attendeeID, $questionID) {
+	global $wpdb;
+	$answers = "";
+	if(($attendeeID > 0) && ($questionID > 0)) {
+		$rs = $wpdb->get_results($wpdb->prepare("SELECT answer FROM ".ATTENDEE_ANSWERS." WHERE questionID = %d AND attendeeID = %d", $questionID, $attendeeID));
+		if(count($rs) > 0) {
+			$answers = stripslashes($rs[0]->answer);
+		}
+	}
+	
+	return $answers;
+}
+
+function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
+	global $wpdb;
+	$output = "";
+	
+	$sql = "SELECT q.id, q.question, questionType FROM ".QUESTIONS_TABLE." q 
+					INNER JOIN ".QUESTION_TYPE_TABLE." qt ON qt.id = q.questionTypeID";
+  $questions = $wpdb->get_results($sql);
+	if(count($questions) > 0) {
+		foreach($questions as $q) {
+			$oldAnswer = rsvp_revtrievePreviousAnswer($attendeeID, $q->id);
+			
+			$output .= "<tr>\r\n
+				<td align=\"left\">".$q->question."</td>\r\n
+				<td align=\"left\">";
+				
+				if($q->questionType == QT_MULTI) {
+					$oldAnswers = explode(",", $oldAnswer);
+					
+					$output .= "</td></tr><tr><td colspan=\"2\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\r\n";
+					$answers = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $q->id));
+					if(count($answers) > 0) {
+						$i = 0;
+						$output .= "<tr>\r\n";
+						foreach($answers as $a) {
+							if($i % 3 == 0) {
+								$output .= "</tr><tr>";
+							}
+							$output .= "<td><input type=\"checkbox\" name=\"".$prefix."question".$q->id."[]\" id=\"".$prefix."question".$q->id.$a->id."\" value=\"".$a->id."\" 
+							  ".((in_array(stripslashes($a->answer), $oldAnswers)) ? " checked=\"checked\"" : "")." />
+								<label for=\"".$prefix."question".$q->id.$a->id."\">".stripslashes($a->answer)."</label></td>\r\n";
+							$i++;
+						}
+						$output .= "</tr>\r\n";
+					}
+					$output .= "</table>\r\n";
+				} else if ($q->questionType == QT_DROP) {
+					$oldAnswers = explode(",", $oldAnswer);
+					
+					$output .= "<select name=\"".$prefix."question".$q->id."\" size=\"1\">\r\n
+						<option value=\"\">--</option>\r\n";
+					$answers = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $q->id));
+					if(count($answers) > 0) {
+						foreach($answers as $a) {
+							$output .= "<option value=\"".$a->id."\" ".((in_array(stripslashes($a->answer), $oldAnswers)) ? " selected=\"selected\"" : "").">".stripslashes($a->answer)."</option>\r\n";
+						}
+					}
+					$output .= "</select>\r\n";
+				} else if ($q->questionType == QT_LONG) {
+					$output .= "</td></tr><tr><td colspan=\"2\"><textarea name=\"".$prefix."question".$q->id."\" rows=\"5\" cols=\"35\">".htmlentities($oldAnswer)."</textarea>";
+				} else {
+					// normal text input
+					$output .= "<input type=\"text\" name=\"".$prefix."question".$q->id."\" value=\"".htmlentities($oldAnswer)."\" size=\"25\" />";
+				}
+				
+			$output .= "</td>\r\n
+			</tr>\r\n";
+		}
+	}
+	
+	return $output;
 }
 
 function frontend_rsvp_thankyou() {

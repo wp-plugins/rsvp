@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 0.9.5
+ * @version 1.0.0
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 0.9.5
+Version: 1.0.0
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -28,7 +28,12 @@ License: GPL
 	session_start();
 	define("ATTENDEES_TABLE", $wpdb->prefix."attendees");
 	define("ASSOCIATED_ATTENDEES_TABLE", $wpdb->prefix."associatedAttendees");
+	define("QUESTIONS_TABLE", $wpdb->prefix."rsvpCustomQuestions");
+	define("QUESTION_TYPE_TABLE", $wpdb->prefix."rsvpQuestionTypes");
+	define("ATTENDEE_ANSWERS", $wpdb->prefix."attendeeAnswers");
+	define("QUESTION_ANSWERS_TABLE", $wpdb->prefix."rsvpCustomQuestionAnswers");
 	define("EDIT_SESSION_KEY", "RsvpEditAttendeeID");
+	define("EDIT_QUESTION_KEY", "RsvpEditQuestionID");
 	define("FRONTEND_TEXT_CHECK", "rsvp-pluginhere");
 	define("OPTION_GREETING", "rsvp_custom_greeting");
 	define("OPTION_THANKYOU", "rsvp_custom_thankyou");
@@ -41,7 +46,14 @@ License: GPL
 	define("OPTION_NOTE_VERBIAGE", "rsvp_note_verbiage");
 	define("OPTION_HIDE_VEGGIE", "rsvp_hide_veggie");
 	define("OPTION_HIDE_KIDS_MEAL", "rsvp_hide_kids_meal");
-	define("RSVP_DB_VERSION", "2.0");
+	define("OPTION_HIDE_ADD_ADDITIONAL", "rsvp_hide_add_additional");
+	define("OPTION_NOTIFY_ON_RSVP", "rsvp_notify_when_rsvp");
+	define("OPTION_NOTIFY_EMAIL", "rsvp_notify_email_address");
+	define("RSVP_DB_VERSION", "3.0");
+	define("QT_SHORT", "shortAnswer");
+	define("QT_MULTI", "multipleChoice");
+	define("QT_LONG", "longAnswer");
+	define("QT_DROP", "dropdown");
 	
 	if((isset($_GET['page']) && (strToLower($_GET['page']) == 'rsvp-admin-export')) || 
 		 (isset($_POST['rsvp-bulk-action']) && (strToLower($_POST['rsvp-bulk-action']) == "export"))) {
@@ -85,7 +97,7 @@ License: GPL
 			$sql = "ALTER TABLE `".$table."` ADD INDEX ( `associatedAttendeeID` )";
 			$wpdb->query($sql);
 		}				
-		add_option("rsvp_db_version", "1.0");
+		add_option("rsvp_db_version", "3.0");
 		
 		if((int)$installed_ver < 2) {
 			$table = $wpdb->prefix."attendees";
@@ -93,6 +105,53 @@ License: GPL
 			$wpdb->query($sql);
 			update_option( "rsvp_db_version", RSVP_DB_VERSION);
 		}
+		
+		$table = $wpdb->prefix."rsvpCustomQuestions";
+		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
+			$sql = " CREATE TABLE $table (
+			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+			`question` MEDIUMTEXT NOT NULL ,
+			`questionTypeID` INT NOT NULL
+			);";
+			$wpdb->query($sql);
+		}
+		
+		$table =  $wpdb->prefix."rsvpQuestionTypes";
+		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
+			$sql = " CREATE TABLE $table (
+			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+			`questionType` VARCHAR( 100 ) NOT NULL , 
+			`friendlyName` VARCHAR(100) NOT NULL 
+			);";
+			$wpdb->query($sql);
+			
+			$wpdb->insert($table, array("questionType" => "shortAnswer", "friendlyName" => "Short Answer"), array('%s', '%s'));
+			$wpdb->insert($table, array("questionType" => "multipleChoice", "friendlyName" => "Multiple Choice"), array('%s', '%s'));
+			$wpdb->insert($table, array("questionType" => "longAnswer", "friendlyName" => "Long Answer"), array('%s', '%s'));
+			$wpdb->insert($table, array("questionType" => "dropdown", "friendlyName" => "Drop Down"), array('%s', '%s'));
+		}
+		
+		$table = $wpdb->prefix."rsvpCustomQuestionAnswers";
+		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
+			$sql = "CREATE TABLE $table (
+			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+			`questionID` INT NOT NULL, 
+			`answer` MEDIUMTEXT NOT NULL
+			);";
+			$wpdb->query($sql);
+		}
+		
+		$table = $wpdb->prefix."attendeeAnswers";
+		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
+			$sql = "CREATE TABLE $table (
+			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+			`questionID` INT NOT NULL, 
+			`answer` MEDIUMTEXT NOT NULL, 
+			`attendeeID` INT NOT NULL 
+			);";
+			$wpdb->query($sql);
+		}
+		update_option( "rsvp_db_version", RSVP_DB_VERSION);
 	}
 
 	function rsvp_admin_guestlist_options() {
@@ -163,6 +222,20 @@ License: GPL
 					<tr valign="top">
 						<th scope="row"><label for="rsvp_custom_thankyou">Custom Thank You:</label></th>
 						<td align="left"><textarea name="rsvp_custom_thankyou" id="rsvp_custom_thankyou" rows="5" cols="60"><?php echo htmlspecialchars(get_option(OPTION_THANKYOU)); ?></textarea></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="rsvp_hide_add_additional">Do not allow additional guests</label></th>
+						<td align="left"><input type="checkbox" name="rsvp_hide_add_additional" id="rsvp_hide_add_additional" value="Y" 
+							<?php echo ((get_option(OPTION_HIDE_ADD_ADDITIONAL) == "Y") ? " checked=\"checked\"" : ""); ?> /></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="rsvp_notify_when_rsvp">Notify When Guest RSVPs</label></th>
+						<td align="left"><input type="checkbox" name="rsvp_notify_when_rsvp" id="rsvp_notify_when_rsvp" value="Y" 
+							<?php echo ((get_option(OPTION_NOTIFY_ON_RSVP) == "Y") ? " checked=\"checked\"" : ""); ?> /></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="rsvp_notify_email_address">Email address to notify</label></th>
+						<td align="left"><input type="text" name="rsvp_notify_email_address" id="rsvp_notify_email_address" value="<?php echo htmlspecialchars(get_option(OPTION_NOTIFY_EMAIL)); ?>"/></td>
 					</tr>
 				</table>
 				<input type="hidden" name="action" value="update" />
@@ -424,8 +497,16 @@ License: GPL
 			if(get_option(OPTION_HIDE_VEGGIE) != "Y") {
 				$csv .= "\"Vegatarian\",";
 			}
-			$csv .= "\"Note\",\"Associated Attendees\"\r\n";
+			$csv .= "\"Note\",\"Associated Attendees\"";
 			
+			$qRs = $wpdb->get_results("SELECT id, question FROM ".QUESTIONS_TABLE." ORDER BY id");
+			if(count($qRs) > 0) {
+				foreach($qRs as $q) {
+					$csv .= ",\"".stripslashes($q->question)."\"";
+				}
+			}
+			
+			$csv .= "\r\n";
 			foreach($attendees as $a) {
 				$csv .= "\"".stripslashes($a->firstName." ".$a->lastName)."\",\"".($a->rsvpStatus)."\",";
 				
@@ -446,10 +527,24 @@ License: GPL
 						OR id in (SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeID = %d)";
 		
 				$associations = $wpdb->get_results($wpdb->prepare($sql, $a->id, $a->id));
-				foreach($associations as $a) {
-					$csv .= stripslashes($a->firstName." ".$a->lastName)."\r\n";
+				foreach($associations as $assc) {
+					$csv .= trim(stripslashes($assc->firstName." ".$assc->lastName))."\r\n";
 				}
-				$csv .= "\"\r\n";
+				$csv .= "\"";
+				
+				$qRs = $wpdb->get_results("SELECT id, question FROM ".QUESTIONS_TABLE." ORDER BY id");
+				if(count($qRs) > 0) {
+					foreach($qRs as $q) {
+						$aRs = $wpdb->get_results($wpdb->prepare("SELECT answer FROM ".ATTENDEE_ANSWERS." WHERE attendeeID = %d AND questionID = %d", $a->id, $q->id));
+						if(count($aRs) > 0) {
+							$csv .= ",\"".stripslashes($aRs[0]->answer)."\"";
+						} else {
+							$csv .= ",\"\"";
+						}
+					}
+				}
+				
+				$csv .= "\r\n";
 			}
 			if(isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/MSIE/", $_SERVER['HTTP_USER_AGENT'])) {
 				// IE Bug in download name workaround
@@ -646,11 +741,11 @@ License: GPL
 							<select name="associatedAttendees[]" multiple="multiple" size="5" style="height: 200px;">
 								<?php
 									$attendees = $wpdb->get_results("SELECT id, firstName, lastName FROM ".$wpdb->prefix."attendees ORDER BY lastName, firstName");
-									foreach($attendees as $attendee) {
-										if($attendee->id != $_SESSION[EDIT_SESSION_KEY]) {
+									foreach($attendees as $a) {
+										if($a->id != $_SESSION[EDIT_SESSION_KEY]) {
 								?>
-											<option value="<?php echo $attendee->id; ?>" 
-															<?php echo ((in_array($attendee->id, $associatedAttendees)) ? "selected=\"selected\"" : ""); ?>><?php echo htmlentities(stripslashes($attendee->firstName)." ".stripslashes($attendee->lastName)); ?></option>
+											<option value="<?php echo $a->id; ?>" 
+															<?php echo ((in_array($a->id, $associatedAttendees)) ? "selected=\"selected\"" : ""); ?>><?php echo htmlentities(stripslashes($a->firstName)." ".stripslashes($a->lastName)); ?></option>
 								<?php
 										}
 									}
@@ -658,12 +753,279 @@ License: GPL
 							</select>
 						</td>
 					</tr>
+				<?php
+				if(($attendee != null) && ($attendee->id > 0)) {
+					$sql = "SELECT question, answer FROM ".ATTENDEE_ANSWERS." ans 
+						INNER JOIN ".QUESTIONS_TABLE." q ON q.id = ans.questionID 
+						WHERE attendeeID = %d";
+					$aRs = $wpdb->get_results($wpdb->prepare($sql, $attendee->id));
+					if(count($aRs) > 0) {
+				?>
+				<tr>
+					<td colspan="2">
+						<h4>Custom Questions Answered</h4>
+						<table cellpadding="2" cellspacing="0" border="0">
+							<tr>
+								<th>Question</th>
+								<th>Answer</th>
+							</tr>
+				<?php
+						foreach($aRs as $a) {
+				?>
+							<tr>
+								<td><?php echo stripslashes($a->question); ?></td>
+								<td><?php echo stripslashes($a->answer); ?></td>
+							</tr>
+				<?php
+						}
+				?>
+						</table>
+					</td>
+				</tr>
+				<?php
+					}
+				}
+				?>
 				</table>
 				<p class="submit">
 					<input type="submit" class="button-primary" value="<?php _e('Save'); ?>" />
 				</p>
 			</form>
 <?php
+		}
+	}
+	
+	function rsvp_admin_questions() {
+		global $wpdb;
+		
+		if((count($_POST) > 0) && ($_POST['rsvp-bulk-action'] == "delete") && (is_array($_POST['q']) && (count($_POST['q']) > 0))) {
+			foreach($_POST['q'] as $q) {
+				if(is_numeric($q) && ($q > 0)) {
+					$wpdb->query($wpdb->prepare("DELETE FROM ".QUESTIONS_TABLE." WHERE id = %d", $q));
+					$wpdb->query($wpdb->prepare("DELETE FROM ".ATTENDEE_ANSWERS." WHERE questionID = %d", $q));
+				}
+			}
+		}
+		
+		$sql = "SELECT id, question FROM ".QUESTIONS_TABLE;
+		$customQs = $wpdb->get_results($sql);
+	?>
+		<script type="text/javascript" language="javascript" 
+			src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/js/jquery-1.3.2.min.js"></script>
+		<script type="text/javascript" language="javascript">
+			$(document).ready(function() {
+				$("#cb").click(function() {
+					if($("#cb").attr("checked")) {
+						$("input[name='attendee[]']").attr("checked", "checked");
+					} else {
+						$("input[name='attendee[]']").removeAttr("checked");
+					}
+				});
+			});
+		</script>
+		<div class="wrap">	
+			<div id="icon-edit" class="icon32"><br /></div>	
+			<h2>List of current custom questions</h2>
+			<form method="post" id="rsvp-form" enctype="multipart/form-data">
+				<input type="hidden" id="rsvp-bulk-action" name="rsvp-bulk-action" />
+				<div class="tablenav">
+					<div class="alignleft actions">
+						<select id="rsvp-action-top" name="action">
+							<option value="" selected="selected"><?php _e('Bulk Actions', 'rsvp'); ?></option>
+							<option value="delete"><?php _e('Delete', 'rsvp'); ?></option>
+						</select>
+						<input type="submit" value="<?php _e('Apply', 'rsvp'); ?>" name="doaction" id="doaction" class="button-secondary action" onclick="document.getElementById('rsvp-bulk-action').value = document.getElementById('rsvp-action-top').value;" />
+					</div>
+					<div class="clear"></div>
+				</div>
+			<table class="widefat post fixed" cellspacing="0">
+				<thead>
+					<tr>
+						<th scope="col" class="manage-column column-cb check-column" style=""><input type="checkbox" id="cb" /></th>
+						<th scope="col" id="questionCol" class="manage-column column-title" style="">Question</th>			
+					</tr>
+				</thead>
+			</table>
+			<div style="overflow: auto;height: 450px;">
+				<table class="widefat post fixed" cellspacing="0">
+				<?php
+					$i = 0;
+					foreach($customQs as $q) {
+					?>
+						<tr class="<?php echo (($i % 2 == 0) ? "alternate" : ""); ?> author-self">
+							<th scope="row" class="check-column"><input type="checkbox" name="q[]" value="<?php echo $q->id; ?>" /></th>						
+							<td>
+								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-custom-question&amp;id=<?php echo $q->id; ?>"><?php echo htmlentities(stripslashes($q->question)); ?></a>
+							</td>
+						</tr>
+					<?php
+						$i++;
+					}
+				?>
+				</table>
+			</div>
+			</form>
+		</div>
+	<?php
+	}
+	
+	function rsvp_admin_custom_question() {
+		global $wpdb;
+		
+		if((count($_POST) > 0) && !empty($_POST['question']) && is_numeric($_POST['questionTypeID'])) {
+			check_admin_referer('rsvp_add_custom_question');
+			if(isset($_SESSION[EDIT_QUESTION_KEY]) && is_numeric($_SESSION[EDIT_QUESTION_KEY])) {
+				$wpdb->update(QUESTIONS_TABLE, 
+											array("question" => trim($_POST['question']), 
+											      "questionTypeID" => trim($_POST['questionTypeID'])), 
+											array("id" => $_SESSION[EDIT_QUESTION_KEY]), 
+											array("%s", "%d"), 
+											array("%d"));
+				$questionId = $_SESSION[EDIT_QUESTION_KEY];
+				
+				$answers = $wpdb->get_results($wpdb->prepare("SELECT id FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $questionId));
+				if(count($answers) > 0) {
+					foreach($answers as $a) {
+						if(isset($_POST['deleteAnswer'.$a->id]) && (strToUpper($_POST['deleteAnswer'.$a->id]) == "Y")) {
+							$wpdb->query($wpdb->prepare("DELETE FROM ".QUESTION_ANSWERS_TABLE." WHERE id = %d", $a->id));
+						} elseif(isset($_POST['answer'.$a->id]) && !empty($_POST['answer'.$a->id])) {
+							$wpdb->update(QUESTION_ANSWERS_TABLE, 
+													  array("answer" => trim($_POST['answer'.$a->id])), 
+													  array("id"=>$a->id), 
+													  array("%s"), 
+													  array("%d"));
+						}
+					}
+				}
+			} else {
+				$wpdb->insert(QUESTIONS_TABLE, array("question" => trim($_POST['question']), 
+				                                     "questionTypeID" => trim($_POST['questionTypeID'])), 
+				                               array('%s', '%d'));
+				$questionId = $wpdb->insert_id;
+			}
+			
+			if(isset($_POST['numNewAnswers']) && is_numeric($_POST['numNewAnswers']) && 
+			   (($_POST['questionTypeID'] == 2) || ($_POST['questionTypeID'] == 4))) {
+				for($i = 0; $i < $_POST['numNewAnswers']; $i++) {
+					if(isset($_POST['newAnswer'.$i]) && !empty($_POST['newAnswer'.$i])) {
+						$wpdb->insert(QUESTION_ANSWERS_TABLE, array("questionID"=>$questionId, "answer"=>$_POST['newAnswer'.$i]));
+					}
+				}
+			}
+		?>
+			<p>Custom Question saved</p>
+			<p>
+				<a href="<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?page=rsvp-admin-questions">Continue to Question List</a> | 
+				<a href="<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?page=rsvp-admin-custom-question">Add another Question</a> 
+			</p>
+		<?php
+		} else {
+			$questionTypeId = 0;
+			$question = "";
+			$isNew = true;
+			$questionId = 0;
+			session_unregister(EDIT_QUESTION_KEY);
+			if(isset($_GET['id']) && is_numeric($_GET['id'])) {
+				$qRs = $wpdb->get_results($wpdb->prepare("SELECT id, question, questionTypeID FROM ".QUESTIONS_TABLE." WHERE id = %d", $_GET['id']));
+				if(count($qRs) > 0) {
+					$isNew = false;
+					$_SESSION[EDIT_QUESTION_KEY] = $qRs[0]->id;
+					$questionId = $qRs[0]->id;
+					$question = stripslashes($qRs[0]->question);
+					$questionTypeId = $qRs[0]->questionTypeID;
+				}
+			} 
+			
+			$sql = "SELECT id, questionType, friendlyName FROM ".QUESTION_TYPE_TABLE;
+			$questionTypes = $wpdb->get_results($sql);
+			?>
+				<script type="text/javascript" language="javascript" 
+					src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/js/jquery-1.3.2.min.js"></script>
+				<script type="text/javascript">
+					function addAnswer(counterElement) {
+						var currAnswer = $("#numNewAnswers").val();
+						if(isNaN(currAnswer)) {
+							currAnswer = 0;
+						}
+				
+						var s = "<tr>\r\n"+ 
+							"<td align=\"right\" width=\"75\"><label for=\"newAnswer" + currAnswer + "\">Answer:</label></td>\r\n" + 
+							"<td><input type=\"text\" name=\"newAnswer" + currAnswer + "\" id=\"newAnswer" + currAnswer + "\" size=\"40\" /></td>\r\n" + 
+						"</tr>\r\n";
+						$("#answerContainer").append(s);
+						currAnswer++;
+						$("#numNewAnswers").val(currAnswer);
+						return false;
+					}
+				
+					$(document).ready(function() {
+						
+						<?php
+						if($isNew || (($questionTypeId != 2) && ($questionTypeId != 4))) {
+						 	echo '$("#answerContainer").hide();';
+						}
+						?>
+						$("#questionType").change(function() {
+							var selectedValue = $("#questionType").val();
+							if((selectedValue == 2) || (selectedValue == 4)) {
+								$("#answerContainer").show();
+							} else {
+								$("#answerContainer").hide();
+							}
+						})
+					});
+				</script>
+				<form name="contact" action="admin.php?page=rsvp-admin-custom-question" method="post">
+					<input type="hidden" name="numNewAnswers" id="numNewAnswers" value="0" />
+					<?php wp_nonce_field('rsvp_add_custom_question'); ?>
+					<p class="submit">
+						<input type="submit" class="button-primary" value="<?php _e('Save'); ?>" />
+					</p>
+					<table id="customQuestions" class="form-table">
+						<tr valign="top">
+							<th scope="row"><label for="questionType">Question Type:</label></th>
+							<td align="left"><select name="questionTypeID" id="questionType" size="1">
+								<?php
+									foreach($questionTypes as $qt) {
+										echo "<option value=\"".$qt->id."\" ".(($questionTypeId == $qt->id) ? " selected=\"selected\"" : "").">".$qt->friendlyName."</option>\r\n";
+									}
+								?>
+							</select>
+							</td>
+						</tr>
+						<tr valign="top">
+							<th scope="row"><label for="question">Question:</label></th>
+							<td align="left"><input type="text" name="question" id="question" size="40" value="<?php echo htmlentities($question); ?>" /></td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								<table cellpadding="0" cellspacing="0" border="0" id="answerContainer">
+									<tr>
+										<th>Answers</th>
+										<th align="right"><a href="#" onclick="return addAnswer();">Add new Answer</a></th>
+									</tr>
+									<?php
+									if(!$isNew) {
+										$aRs = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $questionId));
+										if(count($aRs) > 0) {
+											foreach($aRs as $answer) {
+										?>
+												<tr>
+													<td width="75" align="right"><label for="answer<?php echo $answer->id; ?>">Answer:</label></td>
+													<td><input type="text" name="answer<?php echo $answer->id; ?>" id="answer<?php echo $answer->id; ?>" size="40" value="<?php echo htmlentities(stripslashes($answer->answer)); ?>" />
+													 &nbsp; <input type="checkbox" name="deleteAnswer<?php echo $answer->id; ?>" id="deleteAnswer<?php echo $answer->id; ?>" value="Y" /><label for="deleteAnswer<?php echo $answer->id; ?>">Delete</label></td>
+												</tr>
+										<?
+											}
+										}
+									}
+									?>
+								</table>
+							</td>
+						</tr>
+					</table>
+				</form>
+		<?php
 		}
 	}
 	
@@ -698,6 +1060,18 @@ License: GPL
 										 "publish_posts", 
 										 "rsvp-admin-import",
 										 "rsvp_admin_import");
+		add_submenu_page("rsvp-top-level", 
+										 "Custom Questions",
+										 "Custom Questions",
+										 "publish_posts", 
+										 "rsvp-admin-questions",
+										 "rsvp_admin_questions");
+		add_submenu_page("rsvp-top-level", 
+										 "Add Custom Question",
+										 "Add Custom Question",
+										 "publish_posts", 
+										 "rsvp-admin-custom-question",
+										 "rsvp_admin_custom_question");
 	}
 	
 	function rsvp_register_settings() {
@@ -713,6 +1087,9 @@ License: GPL
 		register_setting('rsvp-option-group', OPTION_NO_VERBIAGE);
 		register_setting('rsvp-option-group', OPTION_DEADLINE);
 		register_setting('rsvp-option-group', OPTION_THANKYOU);
+		register_setting('rsvp-option-group', OPTION_HIDE_ADD_ADDITIONAL);
+		register_setting('rsvp-option-group', OPTION_NOTIFY_EMAIL);
+		register_setting('rsvp-option-group', OPTION_NOTIFY_ON_RSVP);
 	}
 	
 	add_action('admin_menu', 'rsvp_modify_menu');
