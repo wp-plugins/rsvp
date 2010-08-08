@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.0.0
+ * @version 1.1.0
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.0.0
+Version: 1.1.0
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -49,7 +49,7 @@ License: GPL
 	define("OPTION_HIDE_ADD_ADDITIONAL", "rsvp_hide_add_additional");
 	define("OPTION_NOTIFY_ON_RSVP", "rsvp_notify_when_rsvp");
 	define("OPTION_NOTIFY_EMAIL", "rsvp_notify_email_address");
-	define("RSVP_DB_VERSION", "3.0");
+	define("RSVP_DB_VERSION", "4.0");
 	define("QT_SHORT", "shortAnswer");
 	define("QT_MULTI", "multipleChoice");
 	define("QT_LONG", "longAnswer");
@@ -97,11 +97,18 @@ License: GPL
 			$sql = "ALTER TABLE `".$table."` ADD INDEX ( `associatedAttendeeID` )";
 			$wpdb->query($sql);
 		}				
-		add_option("rsvp_db_version", "3.0");
+		add_option("rsvp_db_version", "4.0");
 		
 		if((int)$installed_ver < 2) {
 			$table = $wpdb->prefix."attendees";
 			$sql = "ALTER TABLE ".$table." ADD `personalGreeting` TEXT NOT NULL ;";
+			$wpdb->query($sql);
+			update_option( "rsvp_db_version", RSVP_DB_VERSION);
+		}
+		
+		if((int)$installed_ver < 4) {
+			$table = $wpdb->prefix."rsvpCustomQuestions";
+			$sql = "ALTER TABLE ".$table." ADD `sortOrder` INT NOT NULL DEFAULT '99';";
 			$wpdb->query($sql);
 			update_option( "rsvp_db_version", RSVP_DB_VERSION);
 		}
@@ -111,7 +118,8 @@ License: GPL
 			$sql = " CREATE TABLE $table (
 			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 			`question` MEDIUMTEXT NOT NULL ,
-			`questionTypeID` INT NOT NULL
+			`questionTypeID` INT NOT NULL, 
+			`sortOrder` INT NOT NULL DEFAULT '99'
 			);";
 			$wpdb->query($sql);
 		}
@@ -499,7 +507,7 @@ License: GPL
 			}
 			$csv .= "\"Note\",\"Associated Attendees\"";
 			
-			$qRs = $wpdb->get_results("SELECT id, question FROM ".QUESTIONS_TABLE." ORDER BY id");
+			$qRs = $wpdb->get_results("SELECT id, question FROM ".QUESTIONS_TABLE." ORDER BY sortOrder, id");
 			if(count($qRs) > 0) {
 				foreach($qRs as $q) {
 					$csv .= ",\"".stripslashes($q->question)."\"";
@@ -532,7 +540,7 @@ License: GPL
 				}
 				$csv .= "\"";
 				
-				$qRs = $wpdb->get_results("SELECT id, question FROM ".QUESTIONS_TABLE." ORDER BY id");
+				$qRs = $wpdb->get_results("SELECT id, question FROM ".QUESTIONS_TABLE." ORDER BY sortOrder, id");
 				if(count($qRs) > 0) {
 					foreach($qRs as $q) {
 						$aRs = $wpdb->get_results($wpdb->prepare("SELECT answer FROM ".ATTENDEE_ANSWERS." WHERE attendeeID = %d AND questionID = %d", $a->id, $q->id));
@@ -757,7 +765,8 @@ License: GPL
 				if(($attendee != null) && ($attendee->id > 0)) {
 					$sql = "SELECT question, answer FROM ".ATTENDEE_ANSWERS." ans 
 						INNER JOIN ".QUESTIONS_TABLE." q ON q.id = ans.questionID 
-						WHERE attendeeID = %d";
+						WHERE attendeeID = %d 
+						ORDER BY q.sortOrder";
 					$aRs = $wpdb->get_results($wpdb->prepare($sql, $attendee->id));
 					if(count($aRs) > 0) {
 				?>
@@ -805,20 +814,44 @@ License: GPL
 					$wpdb->query($wpdb->prepare("DELETE FROM ".ATTENDEE_ANSWERS." WHERE questionID = %d", $q));
 				}
 			}
+		} else if((count($_POST) > 0) && ($_POST['rsvp-bulk-action'] == "saveSortOrder")) {
+			$sql = "SELECT id FROM ".QUESTIONS_TABLE;
+			$sortQs = $wpdb->get_results($sql);
+			foreach($sortQs as $q) {
+				if(is_numeric($_POST['sortOrder'.$q->id]) && ($_POST['sortOrder'.$q->id] >= 0)) {
+					$wpdb->update(QUESTIONS_TABLE, 
+												array("sortOrder" => $_POST['sortOrder'.$q->id]), 
+												array("id" => $q->id), 
+												array("%d"), 
+												array("%d"));
+				}
+			}
 		}
 		
-		$sql = "SELECT id, question FROM ".QUESTIONS_TABLE;
+		$sql = "SELECT id, question, sortOrder FROM ".QUESTIONS_TABLE." ORDER BY sortOrder ASC";
 		$customQs = $wpdb->get_results($sql);
 	?>
 		<script type="text/javascript" language="javascript" 
 			src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/js/jquery-1.3.2.min.js"></script>
+		<script type="text/javascript" language="javascript" 
+			src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery.tablednd_0_5.js"></script>
 		<script type="text/javascript" language="javascript">
 			$(document).ready(function() {
 				$("#cb").click(function() {
 					if($("#cb").attr("checked")) {
-						$("input[name='attendee[]']").attr("checked", "checked");
+						$("input[name='q[]']").attr("checked", "checked");
 					} else {
-						$("input[name='attendee[]']").removeAttr("checked");
+						$("input[name='q[]']").removeAttr("checked");
+					}
+				});
+				
+				jQuery("#customQuestions").tableDnD({
+					onDrop: function(table, row) {
+						var rows = table.tBodies[0].rows;
+            for (var i=0; i<rows.length; i++) {
+                jQuery("#sortOrder" + rows[i].id).val(i);
+            }
+	        	
 					}
 				});
 			});
@@ -835,6 +868,7 @@ License: GPL
 							<option value="delete"><?php _e('Delete', 'rsvp'); ?></option>
 						</select>
 						<input type="submit" value="<?php _e('Apply', 'rsvp'); ?>" name="doaction" id="doaction" class="button-secondary action" onclick="document.getElementById('rsvp-bulk-action').value = document.getElementById('rsvp-action-top').value;" />
+						<input type="submit" value="<?php _e('Save Sort Order', 'rsvp'); ?>" name="saveSortButton" id="saveSortButton" class="button-secondary action" onclick="document.getElementById('rsvp-bulk-action').value = 'saveSortOrder';" />
 					</div>
 					<div class="clear"></div>
 				</div>
@@ -847,15 +881,16 @@ License: GPL
 				</thead>
 			</table>
 			<div style="overflow: auto;height: 450px;">
-				<table class="widefat post fixed" cellspacing="0">
+				<table class="widefat post fixed" cellspacing="0" id="customQuestions">
 				<?php
 					$i = 0;
 					foreach($customQs as $q) {
 					?>
-						<tr class="<?php echo (($i % 2 == 0) ? "alternate" : ""); ?> author-self">
+						<tr class="<?php echo (($i % 2 == 0) ? "alternate" : ""); ?> author-self" id="<?php echo $q->id; ?>">
 							<th scope="row" class="check-column"><input type="checkbox" name="q[]" value="<?php echo $q->id; ?>" /></th>						
 							<td>
 								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-custom-question&amp;id=<?php echo $q->id; ?>"><?php echo htmlentities(stripslashes($q->question)); ?></a>
+								<input type="hidden" name="sortOrder<?php echo $q->id; ?>" id="sortOrder<?php echo $q->id; ?>" value="<?php echo $q->sortOrder; ?>" />
 							</td>
 						</tr>
 					<?php

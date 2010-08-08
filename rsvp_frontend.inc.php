@@ -216,7 +216,8 @@ function rsvp_handleAdditionalQuestions($attendeeID, $formName) {
 	$wpdb->query($wpdb->prepare("DELETE FROM ".ATTENDEE_ANSWERS." WHERE attendeeID = %d ", $attendeeID));
 	
 	$qRs = $wpdb->get_results("SELECT q.id, questionType FROM ".QUESTIONS_TABLE." q 
-					INNER JOIN ".QUESTION_TYPE_TABLE." qt ON qt.id = q.questionTypeID");
+					INNER JOIN ".QUESTION_TYPE_TABLE." qt ON qt.id = q.questionTypeID 
+					ORDER BY q.sortOrder");
 	if(count($qRs) > 0) {
 		foreach($qRs as $q) {
 			if(isset($_POST[$formName.$q->id]) && !empty($_POST[$formName.$q->id])) {
@@ -558,7 +559,8 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 	$output = "";
 	
 	$sql = "SELECT q.id, q.question, questionType FROM ".QUESTIONS_TABLE." q 
-					INNER JOIN ".QUESTION_TYPE_TABLE." qt ON qt.id = q.questionTypeID";
+					INNER JOIN ".QUESTION_TYPE_TABLE." qt ON qt.id = q.questionTypeID 
+					ORDER BY q.sortOrder ";
   $questions = $wpdb->get_results($sql);
 	if(count($questions) > 0) {
 		foreach($questions as $q) {

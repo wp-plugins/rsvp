@@ -2,8 +2,8 @@
 Contributors: mdedev
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.7
-Tested up to: 2.9.2
-Stable tag: 1.0.0
+Tested up to: 3.0.0
+Stable tag: 1.1.0
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -56,6 +56,11 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.1.0 =
+* Tested the plugin on 3.0.0
+* Added in the ability to sort custom questions
+* Fixed an issue where you could not mass delete custom questions
 
 = 1.0.0 =
 * Removed some default text that pointed to my wedding site, doh.
