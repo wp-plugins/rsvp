@@ -526,7 +526,7 @@ function rsvp_frontend_main_form($attendeeID) {
 																\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\">No</label></td>\" + 
 													\"</tr>\" + ";
 												}
-												$form .= "\"".str_replace("\r\n", "", str_replace("|", "\"", addSlashes(rsvp_buildAdditionalQuestions(0, "| + numAdditional + |"))))."\" + ";
+												$form .= "\"".str_replace("\r", "", str_replace("\r", "", str_replace("|", "\"", addSlashes(rsvp_buildAdditionalQuestions(0, "| + numAdditional + |")))))."\" + ";
 											
 												$form .= "\"</table>\" + 
 												\"<br />\" + 

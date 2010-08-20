@@ -57,6 +57,9 @@ I will see if I can get it added for you.
 
 == Changelog ==
 
+= 1.2.0 =
+* Fixed a bug in the adding of additional guests when there are custom questions
+
 = 1.1.0 =
 * Tested the plugin on 3.0.0
 * Added in the ability to sort custom questions
