@@ -526,7 +526,9 @@ function rsvp_frontend_main_form($attendeeID) {
 																\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\">No</label></td>\" + 
 													\"</tr>\" + ";
 												}
-												$form .= "\"".str_replace("\r", "", str_replace("\r", "", str_replace("|", "\"", addSlashes(rsvp_buildAdditionalQuestions(0, "| + numAdditional + |")))))."\" + ";
+												$tmpVar = str_replace("\r\n", "", str_replace("|", "\"", addSlashes(rsvp_buildAdditionalQuestions(0, "| + numAdditional + |"))));
+												
+												$form .= "\"".$tmpVar."\" + ";
 											
 												$form .= "\"</table>\" + 
 												\"<br />\" + 
@@ -560,15 +562,17 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 	
 	$sql = "SELECT q.id, q.question, questionType FROM ".QUESTIONS_TABLE." q 
 					INNER JOIN ".QUESTION_TYPE_TABLE." qt ON qt.id = q.questionTypeID 
+					WHERE q.permissionLevel = 'public' 
+					  OR (q.permissionLevel = 'private' AND q.id IN (SELECT questionID FROM ".QUESTION_ATTENDEES_TABLE." WHERE attendeeID = $attendeeID))
 					ORDER BY q.sortOrder ";
   $questions = $wpdb->get_results($sql);
 	if(count($questions) > 0) {
 		foreach($questions as $q) {
 			$oldAnswer = rsvp_revtrievePreviousAnswer($attendeeID, $q->id);
 			
-			$output .= "<tr>\r\n
-				<td align=\"left\">".$q->question."</td>\r\n
-				<td align=\"left\">";
+			$output .= "<tr>\r\n".
+				"<td align=\"left\">".$q->question."</td>\r\n".
+				"<td align=\"left\">";
 				
 				if($q->questionType == QT_MULTI) {
 					$oldAnswers = explode(",", $oldAnswer);
@@ -583,8 +587,8 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 								$output .= "</tr><tr>";
 							}
 							$output .= "<td><input type=\"checkbox\" name=\"".$prefix."question".$q->id."[]\" id=\"".$prefix."question".$q->id.$a->id."\" value=\"".$a->id."\" 
-							  ".((in_array(stripslashes($a->answer), $oldAnswers)) ? " checked=\"checked\"" : "")." />
-								<label for=\"".$prefix."question".$q->id.$a->id."\">".stripslashes($a->answer)."</label></td>\r\n";
+							  ".((in_array(stripslashes($a->answer), $oldAnswers)) ? " checked=\"checked\"" : "")." />".
+								"<label for=\"".$prefix."question".$q->id.$a->id."\">".stripslashes($a->answer)."</label></td>\r\n";
 							$i++;
 						}
 						$output .= "</tr>\r\n";
@@ -593,8 +597,8 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 				} else if ($q->questionType == QT_DROP) {
 					$oldAnswers = explode(",", $oldAnswer);
 					
-					$output .= "<select name=\"".$prefix."question".$q->id."\" size=\"1\">\r\n
-						<option value=\"\">--</option>\r\n";
+					$output .= "<select name=\"".$prefix."question".$q->id."\" size=\"1\">\r\n".
+						"<option value=\"\">--</option>\r\n";
 					$answers = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $q->id));
 					if(count($answers) > 0) {
 						foreach($answers as $a) {
@@ -609,8 +613,8 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 					$output .= "<input type=\"text\" name=\"".$prefix."question".$q->id."\" value=\"".htmlentities($oldAnswer)."\" size=\"25\" />";
 				}
 				
-			$output .= "</td>\r\n
-			</tr>\r\n";
+			$output .= "</td>\r\n".
+							   "</tr>\r\n";
 		}
 	}
 	

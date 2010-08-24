@@ -3,7 +3,7 @@ Contributors: mdedev
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.7
 Tested up to: 3.0.0
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -30,6 +30,7 @@ The admin functionality allows you to do the following things:
 * Add, edit and delete guests
 * Associate guests with other guests
 * Create custom questions that can be asked by each attendee
+* Have questions be asked to all guests or limit the question to specific attendees
 * Specify email notifications to happen whenever someone rsvps
 
 If there are any improvements or modifications you would like to see in the plugin please feel free to contact me at (mike AT mde DASH dev.com) and 
@@ -59,6 +60,7 @@ I will see if I can get it added for you.
 
 = 1.2.0 =
 * Fixed a bug in the adding of additional guests when there are custom questions
+* Added the ability to have a question be public or private. If a question is marked as private then only the selected attendees will be able to answer the question
 
 = 1.1.0 =
 * Tested the plugin on 3.0.0

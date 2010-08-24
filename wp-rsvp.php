@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.1.0
+ * @version 1.2.0
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.1.0
+Version: 1.2.0
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -32,6 +32,7 @@ License: GPL
 	define("QUESTION_TYPE_TABLE", $wpdb->prefix."rsvpQuestionTypes");
 	define("ATTENDEE_ANSWERS", $wpdb->prefix."attendeeAnswers");
 	define("QUESTION_ANSWERS_TABLE", $wpdb->prefix."rsvpCustomQuestionAnswers");
+	define("QUESTION_ATTENDEES_TABLE", $wpdb->prefix."rsvpCustomQuestionAttendees");
 	define("EDIT_SESSION_KEY", "RsvpEditAttendeeID");
 	define("EDIT_QUESTION_KEY", "RsvpEditQuestionID");
 	define("FRONTEND_TEXT_CHECK", "rsvp-pluginhere");
@@ -49,7 +50,7 @@ License: GPL
 	define("OPTION_HIDE_ADD_ADDITIONAL", "rsvp_hide_add_additional");
 	define("OPTION_NOTIFY_ON_RSVP", "rsvp_notify_when_rsvp");
 	define("OPTION_NOTIFY_EMAIL", "rsvp_notify_email_address");
-	define("RSVP_DB_VERSION", "4.0");
+	define("RSVP_DB_VERSION", "5.0");
 	define("QT_SHORT", "shortAnswer");
 	define("QT_MULTI", "multipleChoice");
 	define("QT_LONG", "longAnswer");
@@ -119,7 +120,8 @@ License: GPL
 			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 			`question` MEDIUMTEXT NOT NULL ,
 			`questionTypeID` INT NOT NULL, 
-			`sortOrder` INT NOT NULL DEFAULT '99'
+			`sortOrder` INT NOT NULL DEFAULT '99', 
+			`permissionLevel` ENUM( 'public', 'private' ) NOT NULL DEFAULT 'public'
 			);";
 			$wpdb->query($sql);
 		}
@@ -157,6 +159,22 @@ License: GPL
 			`answer` MEDIUMTEXT NOT NULL, 
 			`attendeeID` INT NOT NULL 
 			);";
+			$wpdb->query($sql);
+		}
+		
+		$table = $wpdb->prefix."rsvpCustomQuestionAttendees";
+		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
+			$sql = "CREATE TABLE $table (
+			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+			`questionID` INT NOT NULL ,
+			`attendeeID` INT NOT NULL
+			);";
+			$wpdb->query($sql);
+		}
+		
+		if((int)$installed_ver < 5) {
+			$table = QUESTIONS_TABLE;
+			$sql = "ALTER TABLE `$table` ADD `permissionLevel` ENUM( 'public', 'private' ) NOT NULL DEFAULT 'public';";
 			$wpdb->query($sql);
 		}
 		update_option( "rsvp_db_version", RSVP_DB_VERSION);
@@ -912,9 +930,10 @@ License: GPL
 			if(isset($_SESSION[EDIT_QUESTION_KEY]) && is_numeric($_SESSION[EDIT_QUESTION_KEY])) {
 				$wpdb->update(QUESTIONS_TABLE, 
 											array("question" => trim($_POST['question']), 
-											      "questionTypeID" => trim($_POST['questionTypeID'])), 
+											      "questionTypeID" => trim($_POST['questionTypeID']), 
+														"permissionLevel" => ((trim($_POST['permissionLevel']) == "private") ? "private" : "public")), 
 											array("id" => $_SESSION[EDIT_QUESTION_KEY]), 
-											array("%s", "%d"), 
+											array("%s", "%d", "%s"), 
 											array("%d"));
 				$questionId = $_SESSION[EDIT_QUESTION_KEY];
 				
@@ -934,8 +953,9 @@ License: GPL
 				}
 			} else {
 				$wpdb->insert(QUESTIONS_TABLE, array("question" => trim($_POST['question']), 
-				                                     "questionTypeID" => trim($_POST['questionTypeID'])), 
-				                               array('%s', '%d'));
+				                                     "questionTypeID" => trim($_POST['questionTypeID']), 
+																						 "permissionLevel" => ((trim($_POST['permissionLevel']) == "private") ? "private" : "public")),  
+				                               array('%s', '%d', '%s'));
 				$questionId = $wpdb->insert_id;
 			}
 			
@@ -944,6 +964,17 @@ License: GPL
 				for($i = 0; $i < $_POST['numNewAnswers']; $i++) {
 					if(isset($_POST['newAnswer'.$i]) && !empty($_POST['newAnswer'.$i])) {
 						$wpdb->insert(QUESTION_ANSWERS_TABLE, array("questionID"=>$questionId, "answer"=>$_POST['newAnswer'.$i]));
+					}
+				}
+			}
+			
+			if(strToLower(trim($_POST['permissionLevel'])) == "private") {
+				$wpdb->query($wpdb->prepare("DELETE FROM ".QUESTION_ATTENDEES_TABLE." WHERE questionID = %d", $questionId));
+				if(isset($_POST['attendees']) && is_array($_POST['attendees'])) {
+					foreach($_POST['attendees'] as $aid) {
+						if(is_numeric($aid) && ($aid > 0)) {
+							$wpdb->insert(QUESTION_ATTENDEES_TABLE, array("attendeeID"=>$aid, "questionID"=>$questionId), array("%d", "%d"));
+						}
 					}
 				}
 			}
@@ -959,15 +990,27 @@ License: GPL
 			$question = "";
 			$isNew = true;
 			$questionId = 0;
+			$permissionLevel = "public";
+			$savedAttendees = array();
 			session_unregister(EDIT_QUESTION_KEY);
 			if(isset($_GET['id']) && is_numeric($_GET['id'])) {
-				$qRs = $wpdb->get_results($wpdb->prepare("SELECT id, question, questionTypeID FROM ".QUESTIONS_TABLE." WHERE id = %d", $_GET['id']));
+				$qRs = $wpdb->get_results($wpdb->prepare("SELECT id, question, questionTypeID, permissionLevel FROM ".QUESTIONS_TABLE." WHERE id = %d", $_GET['id']));
 				if(count($qRs) > 0) {
 					$isNew = false;
 					$_SESSION[EDIT_QUESTION_KEY] = $qRs[0]->id;
 					$questionId = $qRs[0]->id;
 					$question = stripslashes($qRs[0]->question);
+					$permissionLevel = stripslashes($qRs[0]->permissionLevel);
 					$questionTypeId = $qRs[0]->questionTypeID;
+					
+					if($permissionLevel == "private") {
+						$aRs = $wpdb->get_results($wpdb->prepare("SELECT attendeeID FROM ".QUESTION_ATTENDEES_TABLE." WHERE questionID = %d", $questionId));
+						if(count($aRs) > 0) {
+							foreach($aRs as $a) {
+								$savedAttendees[] = $a->attendeeID;
+							}
+						}
+					}
 				}
 			} 
 			
@@ -999,6 +1042,12 @@ License: GPL
 						if($isNew || (($questionTypeId != 2) && ($questionTypeId != 4))) {
 						 	echo '$("#answerContainer").hide();';
 						}
+						
+						if($isNew || ($permissionLevel == "public")) {
+						?>
+							jQuery("#attendeesArea").hide();
+						<?php
+						}
 						?>
 						$("#questionType").change(function() {
 							var selectedValue = $("#questionType").val();
@@ -1006,6 +1055,14 @@ License: GPL
 								$("#answerContainer").show();
 							} else {
 								$("#answerContainer").hide();
+							}
+						})
+						
+						jQuery("#permissionLevel").change(function() {
+							if(jQuery("#permissionLevel").val() != "public") {
+								jQuery("#attendeesArea").show();
+							} else {
+								jQuery("#attendeesArea").hide();
 							}
 						})
 					});
@@ -1033,6 +1090,13 @@ License: GPL
 							<td align="left"><input type="text" name="question" id="question" size="40" value="<?php echo htmlentities($question); ?>" /></td>
 						</tr>
 						<tr>
+							<th scope="row"><label for="permissionLevel">Question Permission Level:</label></th>
+							<td align="left"><select name="permissionLevel" id="permissionLevel" size="1">
+								<option value="public" <?php echo ($permissionLevel == "public") ? " selected=\"selected\"" : ""; ?>>Public</option>
+								<option value="private" <?php echo ($permissionLevel == "private") ? " selected=\"selected\"" : ""; ?>>Private</option>
+							</select></td>
+						</tr>
+						<tr>
 							<td colspan="2">
 								<table cellpadding="0" cellspacing="0" border="0" id="answerContainer">
 									<tr>
@@ -1056,6 +1120,22 @@ License: GPL
 									}
 									?>
 								</table>
+							</td>
+						</tr>
+						<tr id="attendeesArea">
+							<th scope="row"><label for="attendees">Attendees allowed to answer this question:</label></th>
+							<td>
+								<select name="attendees[]" id="attendees" style="height:75px;" multiple="multiple">
+								<?php
+									$attendees = $wpdb->get_results("SELECT id, firstName, lastName FROM ".$wpdb->prefix."attendees ORDER BY lastName, firstName");
+									foreach($attendees as $a) {
+								?>
+									<option value="<?php echo $a->id; ?>" 
+													<?php echo ((in_array($a->id, $savedAttendees)) ? " selected=\"selected\"" : ""); ?>><?php echo htmlentities(stripslashes($a->firstName)." ".stripslashes($a->lastName)); ?></option>
+								<?php
+									}
+								?>
+								</select>
 							</td>
 						</tr>
 					</table>
