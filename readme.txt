@@ -58,6 +58,9 @@ I will see if I can get it added for you.
 
 == Changelog ==
 
+= 1.2.1 =
+* Fixed a bug that was causing an error on activation for people with servers that did not have short open tags configured
+
 = 1.2.0 =
 * Fixed a bug in the adding of additional guests when there are custom questions
 * Added the ability to have a question be public or private. If a question is marked as private then only the selected attendees will be able to answer the question
