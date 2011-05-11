@@ -3,7 +3,7 @@ function rsvp_frontend_handler($text) {
 	global $wpdb; 
 	
 	//QUIT if the replacement string doesn't exist
-	if (!strstr($text,FRONTEND_TEXT_CHECK)) return $text;
+	if (!strstr($text,RSVP_FRONTEND_TEXT_CHECK)) return $text;
 	
 	// See if we should allow people to RSVP, etc...
 	$openDate = get_option(OPTION_OPENDATE);
@@ -92,12 +92,13 @@ function rsvp_frontend_handler($text) {
 					}
 					
 					if((get_option(OPTION_NOTIFY_ON_RSVP) == "Y") && (get_option(OPTION_NOTIFY_EMAIL) != "")) {
-						$sql = "SELECT firstName, lastName FROM ".ATTENDEES_TABLE." WHERE id= ".$attendeeID;
+						$sql = "SELECT firstName, lastName, rsvpStatus FROM ".ATTENDEES_TABLE." WHERE id= ".$attendeeID;
 						$attendee = $wpdb->get_results($sql);
 						if(count($attendee) > 0) {
 							$body = "Hello, \r\n\r\n";
 							
-							$body .= stripslashes($attendee[0]->firstName)." ".stripslashes($attendee[0]->lastName)." has submitted their rsvp.";
+							$body .= stripslashes($attendee[0]->firstName)." ".stripslashes($attendee[0]->lastName).
+											 " has submitted their RSVP and has RSVP'd with '".$attendee[0]->rsvpStatus."'.";
 							
 							wp_mail(get_option(OPTION_NOTIFY_EMAIL), "New RSVP Submission", $body);
 						}
@@ -131,7 +132,7 @@ function rsvp_frontend_handler($text) {
 					if($attendee != null) {
 						$output = "<div>\r\n";
 						if(strtolower($attendee->rsvpStatus) == "noresponse") {
-							$output .= "<p>Hi ".htmlentities($attendee->firstName." ".$attendee->lastName)."!</p>".
+							$output .= "<p>Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))."!</p>".
 												"<p>There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.</p>";
 							$output .= rsvp_frontend_main_form($attendee->id);
 						} else {
@@ -166,7 +167,7 @@ function rsvp_frontend_handler($text) {
 					// hey we found something, we should move on and print out any associated users and let them rsvp
 					$output = "<div>\r\n";
 					if(strtolower($attendee->rsvpStatus) == "noresponse") {
-						$output .= "<p>Hi ".htmlentities($attendee->firstName." ".$attendee->lastName)."!</p>".
+						$output .= "<p>Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))."!</p>".
 											"<p>There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.</p>";
 						$output .= rsvp_frontend_main_form($attendee->id);
 					} else {
@@ -238,7 +239,7 @@ function rsvp_handleAdditionalQuestions($attendeeID, $formName) {
 																									 "questionID" => $q->id), 
 																						 array('%d', '%s', '%d'));
 					}
-				} else if ($q->questionType == QT_DROP) {
+				} else if (($q->questionType == QT_DROP) || ($q->questionType == QT_RADIO)) {
 					$aRs = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $q->id));
 					if(count($aRs) > 0) {
 						foreach($aRs as $a) {
@@ -263,7 +264,7 @@ function rsvp_handleAdditionalQuestions($attendeeID, $formName) {
 }
 
 function rsvp_frontend_prompt_to_edit($attendee) {
-	$prompt = "<p>Hi ".htmlentities($attendee->firstName." ".$attendee->lastName)." it looks like you have already RSVP'd. 
+	$prompt = "<p>Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))." it looks like you have already RSVP'd. 
 								Would you like to edit your reservation?</p>";
 	$prompt .= "<form method=\"post\">\r\n
 								<input type=\"hidden\" name=\"attendeeID\" value=\"".$attendee->id."\" />
@@ -586,8 +587,8 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 							if($i % 3 == 0) {
 								$output .= "</tr><tr>";
 							}
-							$output .= "<td><input type=\"checkbox\" name=\"".$prefix."question".$q->id."[]\" id=\"".$prefix."question".$q->id.$a->id."\" value=\"".$a->id."\" 
-							  ".((in_array(stripslashes($a->answer), $oldAnswers)) ? " checked=\"checked\"" : "")." />".
+							$output .= "<td><input type=\"checkbox\" name=\"".$prefix."question".$q->id."[]\" id=\"".$prefix."question".$q->id.$a->id."\" value=\"".$a->id."\" "
+							  .((in_array(stripslashes($a->answer), $oldAnswers)) ? " checked=\"checked\"" : "")." />".
 								"<label for=\"".$prefix."question".$q->id.$a->id."\">".stripslashes($a->answer)."</label></td>\r\n";
 							$i++;
 						}
@@ -608,6 +609,25 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 					$output .= "</select>\r\n";
 				} else if ($q->questionType == QT_LONG) {
 					$output .= "</td></tr><tr><td colspan=\"2\"><textarea name=\"".$prefix."question".$q->id."\" rows=\"5\" cols=\"35\">".htmlentities($oldAnswer)."</textarea>";
+				} else if ($q->questionType == QT_RADIO) {
+					$oldAnswers = explode(",", $oldAnswer);
+					$output .= "</td></tr><tr><td colspan=\"2\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\r\n";
+					$answers = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $q->id));
+					if(count($answers) > 0) {
+						$i = 0;
+						$output .= "<tr>\r\n";
+						foreach($answers as $a) {
+							if($i % 3 == 0) {
+								$output .= "</tr><tr>";
+							}
+							$output .= "<td><input type=\"radio\" name=\"".$prefix."question".$q->id."\" id=\"".$prefix."question".$q->id.$a->id."\" value=\"".$a->id."\" "
+							  .((in_array(stripslashes($a->answer), $oldAnswers)) ? " checked=\"checked\"" : "")." /> ".
+								"<label for=\"".$prefix."question".$q->id.$a->id."\">".stripslashes($a->answer)."</label></td>\r\n";
+							$i++;
+						}
+						$output .= "</tr>\r\n";
+					}
+					$output .= "</table>\r\n";
 				} else {
 					// normal text input
 					$output .= "<input type=\"text\" name=\"".$prefix."question".$q->id."\" value=\"".htmlentities($oldAnswer)."\" size=\"25\" />";

@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.2.1
+ * @version 1.3
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.2.1
+Version: 1.3
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -35,7 +35,7 @@ License: GPL
 	define("QUESTION_ATTENDEES_TABLE", $wpdb->prefix."rsvpCustomQuestionAttendees");
 	define("EDIT_SESSION_KEY", "RsvpEditAttendeeID");
 	define("EDIT_QUESTION_KEY", "RsvpEditQuestionID");
-	define("FRONTEND_TEXT_CHECK", "rsvp-pluginhere");
+	define("RSVP_FRONTEND_TEXT_CHECK", "rsvp-pluginhere");
 	define("OPTION_GREETING", "rsvp_custom_greeting");
 	define("OPTION_THANKYOU", "rsvp_custom_thankyou");
 	define("OPTION_DEADLINE", "rsvp_deadline");
@@ -50,11 +50,12 @@ License: GPL
 	define("OPTION_HIDE_ADD_ADDITIONAL", "rsvp_hide_add_additional");
 	define("OPTION_NOTIFY_ON_RSVP", "rsvp_notify_when_rsvp");
 	define("OPTION_NOTIFY_EMAIL", "rsvp_notify_email_address");
-	define("RSVP_DB_VERSION", "5.0");
+	define("RSVP_DB_VERSION", "6");
 	define("QT_SHORT", "shortAnswer");
 	define("QT_MULTI", "multipleChoice");
 	define("QT_LONG", "longAnswer");
 	define("QT_DROP", "dropdown");
+	define("QT_RADIO", "radio");
 	
 	if((isset($_GET['page']) && (strToLower($_GET['page']) == 'rsvp-admin-export')) || 
 		 (isset($_POST['rsvp-bulk-action']) && (strToLower($_POST['rsvp-bulk-action']) == "export"))) {
@@ -68,116 +69,7 @@ License: GPL
 	function rsvp_database_setup() {
 		global $wpdb;
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-		
-		$installed_ver = get_option("rsvp_db_version");
-		$table = $wpdb->prefix."attendees";
-		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
-			$sql = "CREATE TABLE ".$table." (
-			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-			`firstName` VARCHAR( 100 ) NOT NULL ,
-			`lastName` VARCHAR( 100 ) NOT NULL ,
-			`rsvpDate` DATE NOT NULL ,
-			`rsvpStatus` ENUM( 'Yes', 'No', 'NoResponse' ) NOT NULL DEFAULT 'NoResponse',
-			`note` TEXT NOT NULL ,
-			`kidsMeal` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N',
-			`additionalAttendee` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N',
-			`veggieMeal` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N', 
-			`personalGreeting` TEXT NOT NULL 
-			);";
-			$wpdb->query($sql);
-		}
-		$table = $wpdb->prefix."associatedAttendees";
-		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
-			$sql = "CREATE TABLE ".$table." (
-			`attendeeID` INT NOT NULL ,
-			`associatedAttendeeID` INT NOT NULL
-			);";
-			$wpdb->query($sql);
-			$sql = "ALTER TABLE `".$table."` ADD INDEX ( `attendeeID` ) ";
-			$wpdb->query($sql);
-			$sql = "ALTER TABLE `".$table."` ADD INDEX ( `associatedAttendeeID` )";
-			$wpdb->query($sql);
-		}				
-		add_option("rsvp_db_version", "4.0");
-		
-		if((int)$installed_ver < 2) {
-			$table = $wpdb->prefix."attendees";
-			$sql = "ALTER TABLE ".$table." ADD `personalGreeting` TEXT NOT NULL ;";
-			$wpdb->query($sql);
-			update_option( "rsvp_db_version", RSVP_DB_VERSION);
-		}
-		
-		if((int)$installed_ver < 4) {
-			$table = $wpdb->prefix."rsvpCustomQuestions";
-			$sql = "ALTER TABLE ".$table." ADD `sortOrder` INT NOT NULL DEFAULT '99';";
-			$wpdb->query($sql);
-			update_option( "rsvp_db_version", RSVP_DB_VERSION);
-		}
-		
-		$table = $wpdb->prefix."rsvpCustomQuestions";
-		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
-			$sql = " CREATE TABLE $table (
-			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-			`question` MEDIUMTEXT NOT NULL ,
-			`questionTypeID` INT NOT NULL, 
-			`sortOrder` INT NOT NULL DEFAULT '99', 
-			`permissionLevel` ENUM( 'public', 'private' ) NOT NULL DEFAULT 'public'
-			);";
-			$wpdb->query($sql);
-		}
-		
-		$table =  $wpdb->prefix."rsvpQuestionTypes";
-		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
-			$sql = " CREATE TABLE $table (
-			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-			`questionType` VARCHAR( 100 ) NOT NULL , 
-			`friendlyName` VARCHAR(100) NOT NULL 
-			);";
-			$wpdb->query($sql);
-			
-			$wpdb->insert($table, array("questionType" => "shortAnswer", "friendlyName" => "Short Answer"), array('%s', '%s'));
-			$wpdb->insert($table, array("questionType" => "multipleChoice", "friendlyName" => "Multiple Choice"), array('%s', '%s'));
-			$wpdb->insert($table, array("questionType" => "longAnswer", "friendlyName" => "Long Answer"), array('%s', '%s'));
-			$wpdb->insert($table, array("questionType" => "dropdown", "friendlyName" => "Drop Down"), array('%s', '%s'));
-		}
-		
-		$table = $wpdb->prefix."rsvpCustomQuestionAnswers";
-		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
-			$sql = "CREATE TABLE $table (
-			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-			`questionID` INT NOT NULL, 
-			`answer` MEDIUMTEXT NOT NULL
-			);";
-			$wpdb->query($sql);
-		}
-		
-		$table = $wpdb->prefix."attendeeAnswers";
-		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
-			$sql = "CREATE TABLE $table (
-			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-			`questionID` INT NOT NULL, 
-			`answer` MEDIUMTEXT NOT NULL, 
-			`attendeeID` INT NOT NULL 
-			);";
-			$wpdb->query($sql);
-		}
-		
-		$table = $wpdb->prefix."rsvpCustomQuestionAttendees";
-		if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
-			$sql = "CREATE TABLE $table (
-			`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-			`questionID` INT NOT NULL ,
-			`attendeeID` INT NOT NULL
-			);";
-			$wpdb->query($sql);
-		}
-		
-		if((int)$installed_ver < 5) {
-			$table = QUESTIONS_TABLE;
-			$sql = "ALTER TABLE `$table` ADD `permissionLevel` ENUM( 'public', 'private' ) NOT NULL DEFAULT 'public';";
-			$wpdb->query($sql);
-		}
-		update_option( "rsvp_db_version", RSVP_DB_VERSION);
+		require_once("rsvp_db_setup.inc.php");
 	}
 
 	function rsvp_admin_guestlist_options() {
@@ -353,11 +245,15 @@ License: GPL
 						$yesResults = $wpdb->get_results("SELECT COUNT(*) AS yesCount FROM ".ATTENDEES_TABLE." WHERE rsvpStatus = 'Yes'");
 						$noResults = $wpdb->get_results("SELECT COUNT(*) AS noCount FROM ".ATTENDEES_TABLE." WHERE rsvpStatus = 'No'");
 						$noResponseResults = $wpdb->get_results("SELECT COUNT(*) AS noResponseCount FROM ".ATTENDEES_TABLE." WHERE rsvpStatus = 'NoResponse'");
+						$kidsMeals = $wpdb->get_results("SELECT COUNT(*) AS kidsMealCount FROM ".ATTENDEES_TABLE." WHERE kidsMeal = 'Y'");
+						$veggieMeals = $wpdb->get_results("SELECT COUNT(*) AS veggieMealCount FROM ".ATTENDEES_TABLE." WHERE veggieMeal = 'Y'");
 					?>
 					<div class="alignright">RSVP Count -  
 						Yes: <strong><?php echo $yesResults[0]->yesCount; ?></strong> &nbsp; &nbsp;  &nbsp; &nbsp; 
 						No: <strong><?php echo $noResults[0]->noCount; ?></strong> &nbsp; &nbsp;  &nbsp; &nbsp; 
-						No Response: <strong><?php echo $noResponseResults[0]->noResponseCount; ?></strong>
+						No Response: <strong><?php echo $noResponseResults[0]->noResponseCount; ?></strong> &nbsp; &nbsp;  &nbsp; &nbsp; 
+						Kids Meals: <strong><?php echo $kidsMeals[0]->kidsMealCount; ?></strong> &nbsp; &nbsp;  &nbsp; &nbsp; 
+						Veggie Meals: <strong><?php echo $veggieMeals[0]->veggieMealCount; ?></strong>
 					</div>
 					<div class="clear"></div>
 				</div>
@@ -419,8 +315,18 @@ License: GPL
 												alt="Sort Descending Vegetarian Status" title="Sort Descending Vegetarian Status" border="0"></a>
 						</th>
 						<?php } ?>
-						<th scope="col" id="note" class="manage-column column-title" style="">Custom Message</th>
+						<th scope="col" id="customMessage" class="manage-column column-title" style="">Custom Message</th>
 						<th scope="col" id="note" class="manage-column column-title" style="">Note</th>
+						<?php
+							$qRs = $wpdb->get_results("SELECT id, question FROM ".QUESTIONS_TABLE." ORDER BY sortOrder, id");
+							if(count($qRs) > 0) {
+								foreach($qRs as $q) {
+						?>
+							<th scope="col" class="manage-column -column-title"><?php echo htmlentities(stripslashes($q->question)); ?></th>
+						<?php		
+								}
+							}
+						?>
 						<th scope="col" id="associatedAttendees" class="manage-column column-title" style="">Associated Attendees</th>
 					</tr>
 				</thead>
@@ -464,9 +370,20 @@ License: GPL
 							<td><?php
 								echo nl2br(stripslashes(trim($attendee->personalGreeting)));
 							?></td>
-							<td><?php
-								echo nl2br(stripslashes(trim($attendee->note)));
-							?></td>
+							<td><?php echo nl2br(stripslashes(trim($attendee->note))); ?></td>
+							<?php
+								$sql = "SELECT question, answer FROM ".QUESTIONS_TABLE." q 
+									LEFT JOIN ".ATTENDEE_ANSWERS." ans ON q.id = ans.questionID AND ans.attendeeID = %d 
+									ORDER BY q.sortOrder";
+								$aRs = $wpdb->get_results($wpdb->prepare($sql, $attendee->id));
+								if(count($aRs) > 0) {
+									foreach($aRs as $a) {
+							?>
+									<td><?php echo htmlentities(utf8_decode(stripslashes($a->answer))); ?></td>
+							<?php
+									}
+								}
+							?>
 							<td>
 							<?php
 								$sql = "SELECT firstName, lastName FROM ".ATTENDEES_TABLE." 
@@ -689,17 +606,19 @@ License: GPL
 				$wpdb->update(ATTENDEES_TABLE, 
 											array("firstName" => trim($_POST['firstName']), 
 											      "lastName" => trim($_POST['lastName']), 
-											      "personalGreeting" => trim($_POST['personalGreeting'])), 
+											      "personalGreeting" => trim($_POST['personalGreeting']), 
+														"rsvpStatus" => trim($_POST['rsvpStatus'])), 
 											array("id" => $_SESSION[EDIT_SESSION_KEY]), 
-											array("%s", "%s", "%s"), 
+											array("%s", "%s", "%s", "%s"), 
 											array("%d"));
 				$attendeeId = $_SESSION[EDIT_SESSION_KEY];
 				$wpdb->query($wpdb->prepare("DELETE FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeId = %d", $attendeeId));
 			} else {
 				$wpdb->insert(ATTENDEES_TABLE, array("firstName" => trim($_POST['firstName']), 
 				                                     "lastName" => trim($_POST['lastName']),
-																						 "personalGreeting" => trim($_POST['personalGreeting'])), 
-				                               array('%s', '%s', '%s'));
+																						 "personalGreeting" => trim($_POST['personalGreeting']), 
+																						 "rsvpStatus" => trim($_POST['rsvpStatus'])), 
+				                               array('%s', '%s', '%s', '%s'));
 				$attendeeId = $wpdb->insert_id;
 			}
 			
@@ -711,7 +630,7 @@ License: GPL
 				}
 			}
 		?>
-			<p>Attendee <?php echo htmlentities($_POST['firstName']." ".$_POST['lastName']);?> has been successfully saved</p>
+			<p>Attendee <?php echo htmlentities(stripslashes($_POST['firstName']." ".$_POST['lastName']));?> has been successfully saved</p>
 			<p>
 				<a href="<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?page=rsvp-top-level">Continue to Attendee List</a> | 
 				<a href="<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?page=rsvp-admin-guest">Add a Guest</a> 
@@ -724,14 +643,16 @@ License: GPL
 			$firstName = "";
 			$lastName = "";
 			$personalGreeting = "";
+			$rsvpStatus = "NoResponse";
 			
 			if(isset($_GET['id']) && is_numeric($_GET['id'])) {
-				$attendee = $wpdb->get_row("SELECT id, firstName, lastName, personalGreeting FROM ".ATTENDEES_TABLE." WHERE id = ".$_GET['id']);
+				$attendee = $wpdb->get_row("SELECT id, firstName, lastName, personalGreeting, rsvpStatus FROM ".ATTENDEES_TABLE." WHERE id = ".$_GET['id']);
 				if($attendee != null) {
 					$_SESSION[EDIT_SESSION_KEY] = $attendee->id;
 					$firstName = stripslashes($attendee->firstName);
 					$lastName = stripslashes($attendee->lastName);
 					$personalGreeting = stripslashes($attendee->personalGreeting);
+					$rsvpStatus = $attendee->rsvpStatus;
 					
 					// Get the associated attendees and add them to an array
 					$associations = $wpdb->get_results("SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeId = ".$attendee->id.
@@ -756,6 +677,22 @@ License: GPL
 					<tr valign="top">
 						<th scope="row"><label for="lastName">Last Name:</label></th>
 						<td align="left"><input type="text" name="lastName" id="lastName" size="30" value="<?php echo htmlentities($lastName); ?>" /></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="rsvpStatus">RSVP Status</label></th>
+						<td align="left">
+							<select name="rsvpStatus" id="rsvpStatus" size="1">
+								<option value="NoResponse" <?php
+									echo (($rsvpStatus == "NoResponse") ? " selected=\"selected\"" : "");
+								?>>No Response</option>
+								<option value="Yes" <?php
+									echo (($rsvpStatus == "Yes") ? " selected=\"selected\"" : "");
+								?>>Yes</option>									
+								<option value="No" <?php
+									echo (($rsvpStatus == "No") ? " selected=\"selected\"" : "");
+								?>>No</option>
+							</select>
+						</td>
 					</tr>
 					<tr valign="top">
 						<th scope="row" valign="top"><label for="personalGreeting">Custom Message:</label></th>
@@ -924,6 +861,12 @@ License: GPL
 	
 	function rsvp_admin_custom_question() {
 		global $wpdb;
+		$answerQuestionTypes = array(2,4,5);
+		
+		$radioQuestionType = $wpdb->get_results("SELECT id FROM ".QUESTION_TYPE_TABLE." WHERE questionType = 'radio'");
+		if($radioQuestionType == 0) {
+			$wpdb->insert(QUESTION_TYPE_TABLE, array("questionType" => "radio", "friendlyName" => "Radio"), array('%s', '%s'));
+		}
 		
 		if((count($_POST) > 0) && !empty($_POST['question']) && is_numeric($_POST['questionTypeID'])) {
 			check_admin_referer('rsvp_add_custom_question');
@@ -960,7 +903,7 @@ License: GPL
 			}
 			
 			if(isset($_POST['numNewAnswers']) && is_numeric($_POST['numNewAnswers']) && 
-			   (($_POST['questionTypeID'] == 2) || ($_POST['questionTypeID'] == 4))) {
+			   in_array($_POST['questionTypeID'], $answerQuestionTypes)) {
 				for($i = 0; $i < $_POST['numNewAnswers']; $i++) {
 					if(isset($_POST['newAnswer'.$i]) && !empty($_POST['newAnswer'.$i])) {
 						$wpdb->insert(QUESTION_ANSWERS_TABLE, array("questionID"=>$questionId, "answer"=>$_POST['newAnswer'.$i]));
@@ -1039,7 +982,7 @@ License: GPL
 					$(document).ready(function() {
 						
 						<?php
-						if($isNew || (($questionTypeId != 2) && ($questionTypeId != 4))) {
+						if($isNew || !in_array($questionTypeId, $answerQuestionTypes)) {
 						 	echo '$("#answerContainer").hide();';
 						}
 						
@@ -1051,7 +994,7 @@ License: GPL
 						?>
 						$("#questionType").change(function() {
 							var selectedValue = $("#questionType").val();
-							if((selectedValue == 2) || (selectedValue == 4)) {
+							if((selectedValue == 2) || (selectedValue == 4) || (selectedValue == 5)) {
 								$("#answerContainer").show();
 							} else {
 								$("#answerContainer").hide();
