@@ -132,7 +132,7 @@ function rsvp_frontend_handler($text) {
 					if($attendee != null) {
 						$output = "<div>\r\n";
 						if(strtolower($attendee->rsvpStatus) == "noresponse") {
-							$output .= "<p>Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))."!</p>".
+							$output .= "<p>Hi ".htmlentities(stripslashes(utf8_decode($attendee->firstName." ".$attendee->lastName)))."!</p>".
 												"<p>There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.</p>";
 							$output .= rsvp_frontend_main_form($attendee->id);
 						} else {
@@ -167,7 +167,7 @@ function rsvp_frontend_handler($text) {
 					// hey we found something, we should move on and print out any associated users and let them rsvp
 					$output = "<div>\r\n";
 					if(strtolower($attendee->rsvpStatus) == "noresponse") {
-						$output .= "<p>Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))."!</p>".
+						$output .= "<p>Hi ".htmlentities(stripslashes(utf8_decode($attendee->firstName." ".$attendee->lastName)))."!</p>".
 											"<p>There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.</p>";
 						$output .= rsvp_frontend_main_form($attendee->id);
 					} else {
@@ -189,7 +189,7 @@ function rsvp_frontend_handler($text) {
 											<input type=\"hidden\" name=\"rsvpStep\" value=\"foundattendee\" />\r\n
 											<input type=\"hidden\" name=\"attendeeID\" value=\"".$a->id."\" />\r\n
 											<p style=\"text-align:left;\">\r\n
-									".htmlentities($a->firstName." ".$a->lastName)." 
+									".htmlentities(utf8_decode($a->firstName." ".$a->lastName))." 
 									<input type=\"submit\" value=\"RSVP\" />\r\n
 									</p>\r\n</form>\r\n";
 						}
@@ -199,7 +199,7 @@ function rsvp_frontend_handler($text) {
 						$i = strlen($truncFirstName);
 					}
 				}
-				return "<p><strong>We were unable to find anyone with a name of ".htmlentities($firstName." ".$lastName)."</strong></p>\r\n".rsvp_frontend_greeting();
+				return "<p><strong>We were unable to find anyone with a name of ".htmlentities(utf8_decode($firstName." ".$lastName))."</strong></p>\r\n".rsvp_frontend_greeting();
 				break;
 			case("newsearch"):
 			default:
@@ -264,7 +264,7 @@ function rsvp_handleAdditionalQuestions($attendeeID, $formName) {
 }
 
 function rsvp_frontend_prompt_to_edit($attendee) {
-	$prompt = "<p>Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))." it looks like you have already RSVP'd. 
+	$prompt = "<p>Hi ".htmlentities(utf8_decode(stripslashes($attendee->firstName." ".$attendee->lastName)))." it looks like you have already RSVP'd. 
 								Would you like to edit your reservation?</p>";
 	$prompt .= "<form method=\"post\">\r\n
 								<input type=\"hidden\" name=\"attendeeID\" value=\"".$attendee->id."\" />
@@ -354,7 +354,7 @@ function rsvp_frontend_main_form($attendeeID) {
 							<tr><td><br /></td></tr>";		
 	if(!empty($attendee->personalGreeting)) {
 		$form .= "<tr>\r\n
-						<td colspan=\"2\" align=\"left\">".nl2br($attendee->personalGreeting)."</td>\r\n
+						<td colspan=\"2\" align=\"left\">".nl2br(utf8_decode($attendee->personalGreeting))."</td>\r\n
 					</tr>
 					<tr><td><br /></td></tr>\r\n";
 	}
@@ -421,12 +421,12 @@ function rsvp_frontend_main_form($attendeeID) {
 		$form .= "<h3>The following people are associated with you.  At this time you can RSVP for them as well.</h3>";
 		foreach($associations as $a) {
 			$form .= "<div style=\"text-align:left;border-top: 1px solid;\">\r\n
-							<p><label for=\"rsvpFor".$a->id."\">RSVP for ".htmlentities($a->firstName." ".$a->lastName)."?</label> 
+							<p><label for=\"rsvpFor".$a->id."\">RSVP for ".htmlentities(utf8_decode($a->firstName." ".$a->lastName))."?</label> 
 									<input type=\"checkbox\" name=\"rsvpFor".$a->id."\" id=\"rsvpFor".$a->id."\" value=\"Y\" /></p>";
 			
 			$form .= "<table cellpadding=\"2\" cellspacing=\"0\" border=\"0\">\r\n";
 			$form .= "  <tr>\r\n
-										<td align=\"left\">Will ".htmlentities($a->firstName)." be attending?</td>\r\n
+										<td align=\"left\">Will ".htmlentities(utf8_decode($a->firstName))." be attending?</td>\r\n
 										<td align=\"left\"><input type=\"radio\" name=\"attending".$a->id."\" value=\"Y\" id=\"attending".$a->id."Y\" checked=\"checked\" /> 
 																			<label for=\"attending".$a->id."Y\">Yes</label> 
 												<input type=\"radio\" name=\"attending".$a->id."\" value=\"N\" id=\"attending".$a->id."N\" /> <label for=\"attending".$a->id."N\">No</label></td>
@@ -435,14 +435,14 @@ function rsvp_frontend_main_form($attendeeID) {
 			
 			if(!empty($a->personalGreeting)) {
 				$form .= "<tr>\r\n
-								<td colspan=\"2\" align=\"left\">".nl2br($a->personalGreeting)."</td>\r\n
+								<td colspan=\"2\" align=\"left\">".nl2br(utf8_decode($a->personalGreeting))."</td>\r\n
 							</tr>
 							<tr><td><br /></td></tr>\r\n";
 			}
 			
 			if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
 				$form .= "	<tr>
-											<td align=\"left\">Does ".htmlentities($a->firstName)." need a kids meal?&nbsp;</td> 
+											<td align=\"left\">Does ".htmlentities(utf8_decode($a->firstName))." need a kids meal?&nbsp;</td> 
 											<td align=\"left\"><input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"Y\" id=\"attending".$a->id."KidsMealY\" /> 
 																				<label for=\"attending".$a->id."KidsMealY\">Yes</label> 
 													<input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"N\" id=\"attending".$a->id."KidsMealN\" checked=\"checked\" /> 
@@ -453,7 +453,7 @@ function rsvp_frontend_main_form($attendeeID) {
 			
 			if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
 				$form .= "	<tr>
-											<td align=\"left\">Does ".htmlentities($a->firstName)." need a vegetarian meal?&nbsp;</td> 
+											<td align=\"left\">Does ".htmlentities(utf8_decode($a->firstName))." need a vegetarian meal?&nbsp;</td> 
 											<td align=\"left\"><input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"Y\" id=\"attending".$a->id."VeggieMealY\" /> 
 																				<label for=\"attending".$a->id."VeggieMealY\">Yes</label> 
 													<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"N\" id=\"attending".$a->id."VeggieMealN\" checked=\"checked\" /> 

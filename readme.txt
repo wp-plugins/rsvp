@@ -1,8 +1,9 @@
 === RSVP Plugin ===
 Contributors: mdedev
+Donate link: http://www.amazon.com/wishlist/2Q3LK1E1O3ZQ6
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.7
-Tested up to: 3.0.2
+Tested up to: 3.1
 Stable tag: 1.3
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
@@ -65,6 +66,7 @@ I will see if I can get it added for you.
 * Fixed an issue with when searching for people with an apostrophe in it, it would display with the added escaping. Made sure to remove the escaping.  
 * Added in the veggie and kids meal total count to the list of attendees in the admin area
 * Made it so admins can change the RSVP status
+* Fixed an issue with international characters not being displayed correctly on both the admin and public areas of the plugin
 
 = 1.2.1 =
 * Fixed a bug that was causing an error on activation for people with servers that did not have short open tags configured

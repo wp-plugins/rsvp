@@ -340,7 +340,7 @@ License: GPL
 						<tr class="<?php echo (($i % 2 == 0) ? "alternate" : ""); ?> author-self">
 							<th scope="row" class="check-column"><input type="checkbox" name="attendee[]" value="<?php echo $attendee->id; ?>" /></th>						
 							<td>
-								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-guest&amp;id=<?php echo $attendee->id; ?>"><?php echo htmlentities(stripslashes($attendee->firstName)." ".stripslashes($attendee->lastName)); ?></a>
+								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-guest&amp;id=<?php echo $attendee->id; ?>"><?php echo htmlentities(utf8_decode(stripslashes($attendee->firstName)." ".stripslashes($attendee->lastName))); ?></a>
 							</td>
 							<td><?php echo $attendee->rsvpStatus; ?></td>
 							<?php if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {?>
@@ -392,7 +392,7 @@ License: GPL
 							
 								$associations = $wpdb->get_results($wpdb->prepare($sql, $attendee->id, $attendee->id));
 								foreach($associations as $a) {
-									echo htmlentities($a->firstName." ".$a->lastName)."<br />";
+									echo htmlentities(stripslashes(utf8_decode($a->firstName." ".$a->lastName)))."<br />";
 								}
 							?>
 							</td>
@@ -451,7 +451,7 @@ License: GPL
 			
 			$csv .= "\r\n";
 			foreach($attendees as $a) {
-				$csv .= "\"".stripslashes($a->firstName." ".$a->lastName)."\",\"".($a->rsvpStatus)."\",";
+				$csv .= "\"".utf8_decode(stripslashes($a->firstName." ".$a->lastName))."\",\"".($a->rsvpStatus)."\",";
 				
 				if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {
 					$csv .= "\"".(($a->kidsMeal == "Y") ? "Yes" : "No")."\",";
@@ -630,7 +630,7 @@ License: GPL
 				}
 			}
 		?>
-			<p>Attendee <?php echo htmlentities(stripslashes($_POST['firstName']." ".$_POST['lastName']));?> has been successfully saved</p>
+			<p>Attendee <?php echo htmlentities(utf8_decode(stripslashes($_POST['firstName']." ".$_POST['lastName'])));?> has been successfully saved</p>
 			<p>
 				<a href="<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?page=rsvp-top-level">Continue to Attendee List</a> | 
 				<a href="<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?page=rsvp-admin-guest">Add a Guest</a> 
@@ -649,8 +649,8 @@ License: GPL
 				$attendee = $wpdb->get_row("SELECT id, firstName, lastName, personalGreeting, rsvpStatus FROM ".ATTENDEES_TABLE." WHERE id = ".$_GET['id']);
 				if($attendee != null) {
 					$_SESSION[EDIT_SESSION_KEY] = $attendee->id;
-					$firstName = stripslashes($attendee->firstName);
-					$lastName = stripslashes($attendee->lastName);
+					$firstName = utf8_decode(stripslashes($attendee->firstName));
+					$lastName = utf8_decode(stripslashes($attendee->lastName));
 					$personalGreeting = stripslashes($attendee->personalGreeting);
 					$rsvpStatus = $attendee->rsvpStatus;
 					
@@ -708,7 +708,7 @@ License: GPL
 										if($a->id != $_SESSION[EDIT_SESSION_KEY]) {
 								?>
 											<option value="<?php echo $a->id; ?>" 
-															<?php echo ((in_array($a->id, $associatedAttendees)) ? "selected=\"selected\"" : ""); ?>><?php echo htmlentities(stripslashes($a->firstName)." ".stripslashes($a->lastName)); ?></option>
+															<?php echo ((in_array($a->id, $associatedAttendees)) ? "selected=\"selected\"" : ""); ?>><?php echo htmlentities(utf8_decode(stripslashes($a->firstName)." ".stripslashes($a->lastName))); ?></option>
 								<?php
 										}
 									}
