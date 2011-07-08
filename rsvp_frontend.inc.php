@@ -354,7 +354,7 @@ function rsvp_frontend_main_form($attendeeID) {
 							<tr><td><br /></td></tr>";		
 	if(!empty($attendee->personalGreeting)) {
 		$form .= "<tr>\r\n
-						<td colspan=\"2\" align=\"left\">".nl2br(utf8_decode($attendee->personalGreeting))."</td>\r\n
+						<td colspan=\"2\" align=\"left\">".nl2br(utf8_decode(stripslashes($attendee->personalGreeting)))."</td>\r\n
 					</tr>
 					<tr><td><br /></td></tr>\r\n";
 	}
@@ -572,7 +572,7 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 			$oldAnswer = rsvp_revtrievePreviousAnswer($attendeeID, $q->id);
 			
 			$output .= "<tr>\r\n".
-				"<td align=\"left\">".$q->question."</td>\r\n".
+				"<td align=\"left\">".stripslashes($q->question)."</td>\r\n".
 				"<td align=\"left\">";
 				
 				if($q->questionType == QT_MULTI) {
