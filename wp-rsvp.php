@@ -684,6 +684,7 @@ License: GPL
 	function rsvp_admin_guest() {
 		global $wpdb;
 		if((count($_POST) > 0) && !empty($_POST['firstName']) && !empty($_POST['lastName'])) {
+			$wpdb->show_errors();
 			check_admin_referer('rsvp_add_guest');
 			if(isset($_SESSION[EDIT_SESSION_KEY]) && is_numeric($_SESSION[EDIT_SESSION_KEY])) {
 				$wpdb->update(ATTENDEES_TABLE, 
