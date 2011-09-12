@@ -287,19 +287,18 @@ function rsvp_frontend_main_form($attendeeID) {
 	$newRsvps = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
 	
 	
-	$form = "<script type=\"text/javascript\" language=\"javascript\" src=\"".get_option("siteurl")."/wp-content/plugins/rsvp/jquery.js\"></script>\r\n";
-	$form .= "<script type=\"text/javascript\" language=\"javascript\" src=\"".get_option("siteurl")."/wp-content/plugins/rsvp/jquery-validate/jquery.validate.min.js\"></script>";
+	$form = "<script type=\"text/javascript\" language=\"javascript\" src=\"".get_option("siteurl")."/wp-content/plugins/rsvp/jquery-validate/jquery.validate.min.js\"></script>";
 	$form .= "<script type=\"text/javascript\" language=\"javascript\">\r\n
-							$(document).ready(function(){
+							jQuery(document).ready(function(){
 								jQuery.validator.addMethod(\"customNote\", function(value, element) {
-						      if(($(\"#additionalRsvp\").val() > 0) && ($(\"#note\").val() == \"\")) {
+						      if((jQuery(\"#additionalRsvp\").val() > 0) && (jQuery(\"#note\").val() == \"\")) {
 						        return false;
 						      }
 
 						      return true;
 						    }, \"<br />Please enter an email address that we can use to contact you about the extra guest.  We have to keep a pretty close eye on the number of attendees.  Thanks!\");
 						
-								$(\"#rsvpForm\").validate({\r\n
+								jQuery(\"#rsvpForm\").validate({\r\n
 									rules: {
 										note: \"customNote\",
 										newAttending1LastName:  \"required\",
@@ -480,19 +479,19 @@ function rsvp_frontend_main_form($attendeeID) {
 	$form .= "<p><input type=\"submit\" value=\"RSVP\" /></p>\r\n";
 	if(get_option(OPTION_HIDE_ADD_ADDITIONAL) != "Y") {
 		$form .= "<script type=\"text/javascript\" language=\"javascript\">\r\n
-								$(document).ready(function() {
-									$(\"#addRsvp\").click(function() {
+								jQuery(document).ready(function() {
+									jQuery(\"#addRsvp\").click(function() {
 										handleAddRsvpClick();
 									});
 								});
 							
 								function handleAddRsvpClick() {
-									var numAdditional = $(\"#additionalRsvp\").val();
+									var numAdditional = jQuery(\"#additionalRsvp\").val();
 									numAdditional++;
 									if(numAdditional > 3) {
 										alert('You have already added 3 additional rsvp\'s you can add no more.');
 									} else {
-										$(\"#additionalRsvpContainer\").append(\"<div style=\\\"text-align:left;border-top: 1px solid;\\\">\" + \r\n
+										jQuery(\"#additionalRsvpContainer\").append(\"<div style=\\\"text-align:left;border-top: 1px solid;\\\">\" + \r\n
 												\"<table cellpadding=\\\"2\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\" + \r\n
 													\"<tr>\" + \r\n
 													\"	<td align=\\\"left\\\">Person's first name&nbsp;</td>\" + \r\n 
@@ -534,7 +533,7 @@ function rsvp_frontend_main_form($attendeeID) {
 												$form .= "\"</table>\" + 
 												\"<br />\" + 
 											\"</div>\");
-										$(\"#additionalRsvp\").val(numAdditional);
+										jQuery(\"#additionalRsvp\").val(numAdditional);
 									}
 								}
 							</script>\r\n";
@@ -672,9 +671,8 @@ function rsvp_frontend_greeting() {
 	if(!empty($customGreeting)) {
 		$output = nl2br($customGreeting);
 	} 
-	$output .= "<script type=\"text/javascript\" language=\"javascript\" src=\"".get_option("siteurl")."/wp-content/plugins/rsvp/jquery.js\"></script>";
 	$output .= "<script type=\"text/javascript\" language=\"javascript\" src=\"".get_option("siteurl")."/wp-content/plugins/rsvp/jquery-validate/jquery.validate.min.js\"></script>";
-	$output .= "<script type=\"text/javascript\">$(document).ready(function(){ $(\"#rsvp\").validate({rules: {firstName: \"required\",lastName: \"required\"}, messages: {firstName: \"<br />Please enter your first name\", lastName: \"<br />Please enter your last name\"}});});</script>";
+	$output .= "<script type=\"text/javascript\">jQuery(document).ready(function(){ jQuery(\"#rsvp\").validate({rules: {firstName: \"required\",lastName: \"required\"}, messages: {firstName: \"<br />Please enter your first name\", lastName: \"<br />Please enter your last name\"}});});</script>";
 	$output .= "<style text/css>\r\n".
 		"	label.error { font-weight: bold; clear:both;}\r\n".
 		"	input.error { border: 2px solid red; }\r\n".

@@ -75,14 +75,10 @@ License: GPL
 	function rsvp_admin_guestlist_options() {
 ?>
 		<link rel="stylesheet" href="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/css/ui-lightness/jquery-ui-1.7.2.custom.css" type="text/css" media="all" />
-		<script type="text/javascript" language="javascript" 
-			src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/js/jquery-1.3.2.min.js"></script>
-		<script type="text/javascript" language="javascript" 
-			src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/js/jquery-ui-1.7.2.custom.min.js"></script>
 		<script type="text/javascript" language="javascript">
-			$(document).ready(function() {
-				$("#rsvp_opendate").datepicker();
-				$("#rsvp_deadline").datepicker();
+			jQuery(document).ready(function() {
+				jQuery("#rsvp_opendate").datepicker();
+				jQuery("#rsvp_deadline").datepicker();
 			});
 		</script>
 		<div class="wrap">
@@ -212,15 +208,13 @@ License: GPL
 			$sortDirection = $_GET['sortDirection'];
 		}
 	?>
-		<script type="text/javascript" language="javascript" 
-			src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/js/jquery-1.3.2.min.js"></script>
 		<script type="text/javascript" language="javascript">
-			$(document).ready(function() {
-				$("#cb").click(function() {
-					if($("#cb").attr("checked")) {
-						$("input[name='attendee[]']").attr("checked", "checked");
+			jQuery(document).ready(function() {
+				jQuery("#cb").click(function() {
+					if(jQuery("#cb").attr("checked")) {
+						jQuery("input[name='attendee[]']").attr("checked", "checked");
 					} else {
-						$("input[name='attendee[]']").removeAttr("checked");
+						jQuery("input[name='attendee[]']").removeAttr("checked");
 					}
 				});
 			});
@@ -787,16 +781,14 @@ License: GPL
 		$customQs = $wpdb->get_results($sql);
 	?>
 		<script type="text/javascript" language="javascript" 
-			src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/js/jquery-1.3.2.min.js"></script>
-		<script type="text/javascript" language="javascript" 
 			src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery.tablednd_0_5.js"></script>
 		<script type="text/javascript" language="javascript">
-			$(document).ready(function() {
-				$("#cb").click(function() {
-					if($("#cb").attr("checked")) {
-						$("input[name='q[]']").attr("checked", "checked");
+			jQuery(document).ready(function() {
+				jQuery("#cb").click(function() {
+					if(jQuery("#cb").attr("checked")) {
+						jQuery("input[name='q[]']").attr("checked", "checked");
 					} else {
-						$("input[name='q[]']").removeAttr("checked");
+						jQuery("input[name='q[]']").removeAttr("checked");
 					}
 				});
 				
@@ -960,11 +952,9 @@ License: GPL
 			$sql = "SELECT id, questionType, friendlyName FROM ".QUESTION_TYPE_TABLE;
 			$questionTypes = $wpdb->get_results($sql);
 			?>
-				<script type="text/javascript" language="javascript" 
-					src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/js/jquery-1.3.2.min.js"></script>
 				<script type="text/javascript">
 					function addAnswer(counterElement) {
-						var currAnswer = $("#numNewAnswers").val();
+						var currAnswer = jQuery("#numNewAnswers").val();
 						if(isNaN(currAnswer)) {
 							currAnswer = 0;
 						}
@@ -973,17 +963,17 @@ License: GPL
 							"<td align=\"right\" width=\"75\"><label for=\"newAnswer" + currAnswer + "\">Answer:</label></td>\r\n" + 
 							"<td><input type=\"text\" name=\"newAnswer" + currAnswer + "\" id=\"newAnswer" + currAnswer + "\" size=\"40\" /></td>\r\n" + 
 						"</tr>\r\n";
-						$("#answerContainer").append(s);
+						jQuery("#answerContainer").append(s);
 						currAnswer++;
-						$("#numNewAnswers").val(currAnswer);
+						jQuery("#numNewAnswers").val(currAnswer);
 						return false;
 					}
 				
-					$(document).ready(function() {
+					jQuery(document).ready(function() {
 						
 						<?php
 						if($isNew || !in_array($questionTypeId, $answerQuestionTypes)) {
-						 	echo '$("#answerContainer").hide();';
+						 	echo 'jQuery("#answerContainer").hide();';
 						}
 						
 						if($isNew || ($permissionLevel == "public")) {
@@ -992,12 +982,12 @@ License: GPL
 						<?php
 						}
 						?>
-						$("#questionType").change(function() {
-							var selectedValue = $("#questionType").val();
+						jQuery("#questionType").change(function() {
+							var selectedValue = jQuery("#questionType").val();
 							if((selectedValue == 2) || (selectedValue == 4) || (selectedValue == 5)) {
-								$("#answerContainer").show();
+								jQuery("#answerContainer").show();
 							} else {
-								$("#answerContainer").hide();
+								jQuery("#answerContainer").hide();
 							}
 						})
 						
@@ -1074,7 +1064,7 @@ License: GPL
 									foreach($attendees as $a) {
 								?>
 									<option value="<?php echo $a->id; ?>" 
-													<?php echo ((in_array($a->id, $savedAttendees)) ? " selected=\"selected\"" : ""); ?>><?php echo htmlentities(stripslashes($a->firstName)." ".stripslashes($a->lastName)); ?></option>
+													<?php echo ((in_array($a->id, $savedAttendees)) ? " selected=\"selected\"" : ""); ?>><?php echo htmlentities(utf8_decode(stripslashes($a->firstName)." ".stripslashes($a->lastName))); ?></option>
 								<?php
 									}
 								?>
@@ -1150,8 +1140,13 @@ License: GPL
 		register_setting('rsvp-option-group', OPTION_NOTIFY_ON_RSVP);
 	}
 	
+	function rsvp_init() {
+		wp_enqueue_script( 'jquery' );
+	}
+	
 	add_action('admin_menu', 'rsvp_modify_menu');
 	add_action('admin_init', 'rsvp_register_settings');
+	add_action('init', 'rsvp_init');
 	add_filter('the_content', 'rsvp_frontend_handler');
 	register_activation_hook(__FILE__,'rsvp_database_setup');
 ?>
