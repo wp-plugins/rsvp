@@ -3,8 +3,8 @@ Contributors: mdedev
 Donate link: http://www.amazon.com/wishlist/2Q3LK1E1O3ZQ6
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.7
-Tested up to: 3.1
-Stable tag: 1.3
+Tested up to: 3.2.1
+Stable tag: 1.3.1
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -58,6 +58,10 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.3.1 =
+* Added in a debug option to help identify issues with queries saving to the database
+* Changed how the scripts and stylesheets get added so there would be less conflicts with themes
 
 = 1.3 =
 * Made it so custom questions showed up on the attendee list page

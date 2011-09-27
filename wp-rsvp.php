@@ -50,6 +50,7 @@ License: GPL
 	define("OPTION_HIDE_ADD_ADDITIONAL", "rsvp_hide_add_additional");
 	define("OPTION_NOTIFY_ON_RSVP", "rsvp_notify_when_rsvp");
 	define("OPTION_NOTIFY_EMAIL", "rsvp_notify_email_address");
+	define("OPTION_DEBUG_RSVP_QUERIES", "rsvp_debug_queries");
 	define("RSVP_DB_VERSION", "6");
 	define("QT_SHORT", "shortAnswer");
 	define("QT_MULTI", "multipleChoice");
@@ -74,7 +75,6 @@ License: GPL
 
 	function rsvp_admin_guestlist_options() {
 ?>
-		<link rel="stylesheet" href="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery-ui-1.7.2.custom/css/ui-lightness/jquery-ui-1.7.2.custom.css" type="text/css" media="all" />
 		<script type="text/javascript" language="javascript">
 			jQuery(document).ready(function() {
 				jQuery("#rsvp_opendate").datepicker();
@@ -150,6 +150,11 @@ License: GPL
 					<tr>
 						<th scope="row"><label for="rsvp_notify_email_address">Email address to notify</label></th>
 						<td align="left"><input type="text" name="rsvp_notify_email_address" id="rsvp_notify_email_address" value="<?php echo htmlspecialchars(get_option(OPTION_NOTIFY_EMAIL)); ?>"/></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row"><label for="rsvp_debug_queries">Debug RSVP Queries:</label></th>
+						<td align="left"><input type="checkbox" name="rsvp_debug_queries" id="rsvp_debug_queries" 
+							value="Y" <?php echo ((get_option(OPTION_DEBUG_RSVP_QUERIES) == "Y") ? " checked=\"checked\"" : ""); ?> /></td>
 					</tr>
 				</table>
 				<input type="hidden" name="action" value="update" />
@@ -605,6 +610,7 @@ License: GPL
 											array("id" => $_SESSION[EDIT_SESSION_KEY]), 
 											array("%s", "%s", "%s", "%s"), 
 											array("%d"));
+				rsvp_printQueryDebugInfo();
 				$attendeeId = $_SESSION[EDIT_SESSION_KEY];
 				$wpdb->query($wpdb->prepare("DELETE FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeId = %d", $attendeeId));
 			} else {
@@ -613,6 +619,8 @@ License: GPL
 																						 "personalGreeting" => trim($_POST['personalGreeting']), 
 																						 "rsvpStatus" => trim($_POST['rsvpStatus'])), 
 				                               array('%s', '%s', '%s', '%s'));
+				rsvp_printQueryDebugInfo();
+					
 				$attendeeId = $wpdb->insert_id;
 			}
 			
@@ -620,6 +628,7 @@ License: GPL
 				foreach($_POST['associatedAttendees'] as $aid) {
 					if(is_numeric($aid) && ($aid > 0)) {
 						$wpdb->insert(ASSOCIATED_ATTENDEES_TABLE, array("attendeeID"=>$attendeeId, "associatedAttendeeID"=>$aid), array("%d", "%d"));
+						rsvp_printQueryDebugInfo();
 					}
 				}
 			}
@@ -773,6 +782,7 @@ License: GPL
 												array("id" => $q->id), 
 												array("%d"), 
 												array("%d"));
+					rsvp_printQueryDebugInfo();
 				}
 			}
 		}
@@ -780,8 +790,6 @@ License: GPL
 		$sql = "SELECT id, question, sortOrder FROM ".QUESTIONS_TABLE." ORDER BY sortOrder ASC";
 		$customQs = $wpdb->get_results($sql);
 	?>
-		<script type="text/javascript" language="javascript" 
-			src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/jquery.tablednd_0_5.js"></script>
 		<script type="text/javascript" language="javascript">
 			jQuery(document).ready(function() {
 				jQuery("#cb").click(function() {
@@ -858,6 +866,7 @@ License: GPL
 		$radioQuestionType = $wpdb->get_results("SELECT id FROM ".QUESTION_TYPE_TABLE." WHERE questionType = 'radio'");
 		if($radioQuestionType == 0) {
 			$wpdb->insert(QUESTION_TYPE_TABLE, array("questionType" => "radio", "friendlyName" => "Radio"), array('%s', '%s'));
+			rsvp_printQueryDebugInfo();
 		}
 		
 		if((count($_POST) > 0) && !empty($_POST['question']) && is_numeric($_POST['questionTypeID'])) {
@@ -870,6 +879,7 @@ License: GPL
 											array("id" => $_SESSION[EDIT_QUESTION_KEY]), 
 											array("%s", "%d", "%s"), 
 											array("%d"));
+				rsvp_printQueryDebugInfo();
 				$questionId = $_SESSION[EDIT_QUESTION_KEY];
 				
 				$answers = $wpdb->get_results($wpdb->prepare("SELECT id FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $questionId));
@@ -883,6 +893,7 @@ License: GPL
 													  array("id"=>$a->id), 
 													  array("%s"), 
 													  array("%d"));
+							rsvp_printQueryDebugInfo();
 						}
 					}
 				}
@@ -891,6 +902,7 @@ License: GPL
 				                                     "questionTypeID" => trim($_POST['questionTypeID']), 
 																						 "permissionLevel" => ((trim($_POST['permissionLevel']) == "private") ? "private" : "public")),  
 				                               array('%s', '%d', '%s'));
+				rsvp_printQueryDebugInfo();
 				$questionId = $wpdb->insert_id;
 			}
 			
@@ -899,6 +911,7 @@ License: GPL
 				for($i = 0; $i < $_POST['numNewAnswers']; $i++) {
 					if(isset($_POST['newAnswer'.$i]) && !empty($_POST['newAnswer'.$i])) {
 						$wpdb->insert(QUESTION_ANSWERS_TABLE, array("questionID"=>$questionId, "answer"=>$_POST['newAnswer'.$i]));
+						rsvp_printQueryDebugInfo();
 					}
 				}
 			}
@@ -909,6 +922,7 @@ License: GPL
 					foreach($_POST['attendees'] as $aid) {
 						if(is_numeric($aid) && ($aid > 0)) {
 							$wpdb->insert(QUESTION_ATTENDEES_TABLE, array("attendeeID"=>$aid, "questionID"=>$questionId), array("%d", "%d"));
+							rsvp_printQueryDebugInfo();
 						}
 					}
 				}
@@ -1138,10 +1152,34 @@ License: GPL
 		register_setting('rsvp-option-group', OPTION_HIDE_ADD_ADDITIONAL);
 		register_setting('rsvp-option-group', OPTION_NOTIFY_EMAIL);
 		register_setting('rsvp-option-group', OPTION_NOTIFY_ON_RSVP);
+		register_setting('rsvp-option-group', OPTION_DEBUG_RSVP_QUERIES);
+		
+		wp_register_script('jquery_table_sort', get_option("siteurl")."/wp-content/plugins/rsvp/jquery.tablednd_0_5.js");
+		wp_register_script('jquery_ui', "http://ajax.microsoft.com/ajax/jquery.ui/1.8.5/jquery-ui.js");
+		
+		wp_enqueue_script("jquery_table_sort");
+		wp_enqueue_script("jquery_ui");
+		
+		wp_register_style('jquery_ui_stylesheet', "http://ajax.microsoft.com/ajax/jquery.ui/1.8.5/themes/redmond/jquery-ui.css");
+		wp_enqueue_style( 'jquery_ui_stylesheet');
 	}
 	
 	function rsvp_init() {
-		wp_enqueue_script( 'jquery' );
+		wp_register_script('jquery_validate', "http://ajax.microsoft.com/ajax/jquery.validate/1.5.5/jquery.validate.min.js");
+		
+		
+		wp_enqueue_script('jquery');
+		wp_enqueue_script('jquery_validate');
+	}
+	
+	function rsvp_printQueryDebugInfo() {
+		global $wpdb;
+		
+		if(get_option(OPTION_DEBUG_RSVP_QUERIES) == "Y") {
+			echo "<br />Sql Output: ";
+			$wpdb->print_error();
+			echo "<br />";
+		}
 	}
 	
 	add_action('admin_menu', 'rsvp_modify_menu');

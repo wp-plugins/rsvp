@@ -36,7 +36,7 @@ function rsvp_frontend_handler($text) {
 																				array("id" => $attendeeID), 
 																				array("%s", "%s", "%s", "%s", "%s"), 
 																				array("%d"));
-																				
+					rsvp_printQueryDebugInfo();									
 					rsvp_handleAdditionalQuestions($attendeeID, "mainquestion");
 																				
 					$sql = "SELECT id FROM ".ATTENDEES_TABLE." 
@@ -58,6 +58,7 @@ function rsvp_frontend_handler($text) {
 																						 array("id" => $a->id), 
 																						 array("%s", "%s", "%s", "%s"), 
 																						 array("%d"));
+							rsvp_printQueryDebugInfo();
 							rsvp_handleAdditionalQuestions($a->id, $a->id."question");
 						}
 					}
@@ -76,16 +77,19 @@ function rsvp_frontend_handler($text) {
 																											 "veggieMeal" => (isset($_POST['newAttending'.$i.'VeggieMeal']) ? $_POST['newAttending'.$i.'VeggieMeal'] : "N"), 
 																											 "additionalAttendee" => "Y"), 
 																								array('%s', '%s', '%s', '%s', '%s', '%s'));
+									rsvp_printQueryDebugInfo();
 									$newAid = $wpdb->insert_id;
 									rsvp_handleAdditionalQuestions($newAid, $i.'question');
 									// Add associations for this new user
 									$wpdb->insert(ASSOCIATED_ATTENDEES_TABLE, array("attendeeID" => $newAid, 
 																																	"associatedAttendeeID" => $attendeeID), 
 																														array("%d", "%d"));
+									rsvp_printQueryDebugInfo();
 									$wpdb->query($wpdb->prepare("INSERT INTO ".ASSOCIATED_ATTENDEES_TABLE."(attendeeID, associatedAttendeeID)
 																							 SELECT ".$newAid.", associatedAttendeeID 
 																							 FROM ".ASSOCIATED_ATTENDEES_TABLE." 
 																							 WHERE attendeeID = ".$attendeeID));
+									rsvp_printQueryDebugInfo();
 								}
 							}
 						}
@@ -238,6 +242,7 @@ function rsvp_handleAdditionalQuestions($attendeeID, $formName) {
 																									 "answer" => stripslashes($selectedAnswers), 
 																									 "questionID" => $q->id), 
 																						 array('%d', '%s', '%d'));
+						rsvp_printQueryDebugInfo();
 					}
 				} else if (($q->questionType == QT_DROP) || ($q->questionType == QT_RADIO)) {
 					$aRs = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $q->id));
@@ -248,6 +253,7 @@ function rsvp_handleAdditionalQuestions($attendeeID, $formName) {
 																											 "answer" => stripslashes($a->answer), 
 																											 "questionID" => $q->id), 
 																								 array('%d', '%s', '%d'));
+								rsvp_printQueryDebugInfo();
 								break;
 							}
 						}
@@ -257,6 +263,7 @@ function rsvp_handleAdditionalQuestions($attendeeID, $formName) {
 																								 "answer" => $_POST[$formName.$q->id], 
 																								 "questionID" => $q->id), 
 																					 array('%d', '%s', '%d'));
+					rsvp_printQueryDebugInfo();
 				}
 			}
 		}
@@ -287,8 +294,7 @@ function rsvp_frontend_main_form($attendeeID) {
 	$newRsvps = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
 	
 	
-	$form = "<script type=\"text/javascript\" language=\"javascript\" src=\"".get_option("siteurl")."/wp-content/plugins/rsvp/jquery-validate/jquery.validate.min.js\"></script>";
-	$form .= "<script type=\"text/javascript\" language=\"javascript\">\r\n
+	$form = "<script type=\"text/javascript\" language=\"javascript\">\r\n
 							jQuery(document).ready(function(){
 								jQuery.validator.addMethod(\"customNote\", function(value, element) {
 						      if((jQuery(\"#additionalRsvp\").val() > 0) && (jQuery(\"#note\").val() == \"\")) {
@@ -671,8 +677,7 @@ function rsvp_frontend_greeting() {
 	if(!empty($customGreeting)) {
 		$output = nl2br($customGreeting);
 	} 
-	$output .= "<script type=\"text/javascript\" language=\"javascript\" src=\"".get_option("siteurl")."/wp-content/plugins/rsvp/jquery-validate/jquery.validate.min.js\"></script>";
-	$output .= "<script type=\"text/javascript\">jQuery(document).ready(function(){ jQuery(\"#rsvp\").validate({rules: {firstName: \"required\",lastName: \"required\"}, messages: {firstName: \"<br />Please enter your first name\", lastName: \"<br />Please enter your last name\"}});});</script>";
+	$output = "<script type=\"text/javascript\">jQuery(document).ready(function(){ jQuery(\"#rsvp\").validate({rules: {firstName: \"required\",lastName: \"required\"}, messages: {firstName: \"<br />Please enter your first name\", lastName: \"<br />Please enter your last name\"}});});</script>";
 	$output .= "<style text/css>\r\n".
 		"	label.error { font-weight: bold; clear:both;}\r\n".
 		"	input.error { border: 2px solid red; }\r\n".
