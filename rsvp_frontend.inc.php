@@ -30,7 +30,7 @@ function rsvp_frontend_handler($text) {
 					$attendeeID = $_POST['attendeeID'];
 					$wpdb->update(ATTENDEES_TABLE, array("rsvpDate" => date("Y-m-d"), 
 																							 "rsvpStatus" => $rsvpStatus, 
-																							 "note" => $_POST['note'], 
+																							 "note" => $_POST['rsvp_note'], 
 																							 "kidsMeal" => ((isset($_POST['mainKidsMeal']) && (strToUpper($_POST['mainKidsMeal']) == "Y")) ? "Y" : "N"), 
 																							 "veggieMeal" => ((isset($_POST['mainVeggieMeal']) && (strToUpper($_POST['mainVeggieMeal']) == "Y")) ? "Y" : "N")), 
 																				array("id" => $attendeeID), 
@@ -399,7 +399,7 @@ function rsvp_frontend_main_form($attendeeID) {
 								<td valign=\"top\" align=\"left\" colspan=\"2\">".$noteVerbiage."</td>
 							</tr>
 							<tr>
-								<td colspan=\"2\"><textarea name=\"note\" id=\"note\" rows=\"7\" cols=\"50\">".$attendee->note."</textarea></td>
+								<td colspan=\"2\"><textarea name=\"rsvp_note\" id=\"rsvp_note\" rows=\"7\" cols=\"50\">".$attendee->note."</textarea></td>
 						 </tr>";
 	$form .= "</table>\r\n";
 	
@@ -677,7 +677,7 @@ function rsvp_frontend_greeting() {
 	if(!empty($customGreeting)) {
 		$output = nl2br($customGreeting);
 	} 
-	$output = "<script type=\"text/javascript\">jQuery(document).ready(function(){ jQuery(\"#rsvp\").validate({rules: {firstName: \"required\",lastName: \"required\"}, messages: {firstName: \"<br />Please enter your first name\", lastName: \"<br />Please enter your last name\"}});});</script>";
+	$output .= "<script type=\"text/javascript\">jQuery(document).ready(function(){ jQuery(\"#rsvp\").validate({rules: {firstName: \"required\",lastName: \"required\"}, messages: {firstName: \"<br />Please enter your first name\", lastName: \"<br />Please enter your last name\"}});});</script>";
 	$output .= "<style text/css>\r\n".
 		"	label.error { font-weight: bold; clear:both;}\r\n".
 		"	input.error { border: 2px solid red; }\r\n".
