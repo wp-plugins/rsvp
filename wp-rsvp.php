@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.3.1
+ * @version 1.3.2
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.3.1
+Version: 1.3.2
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -51,7 +51,10 @@ License: GPL
 	define("OPTION_NOTIFY_ON_RSVP", "rsvp_notify_when_rsvp");
 	define("OPTION_NOTIFY_EMAIL", "rsvp_notify_email_address");
 	define("OPTION_DEBUG_RSVP_QUERIES", "rsvp_debug_queries");
-	define("RSVP_DB_VERSION", "6");
+	define("OPTION_WELCOME_TEXT", "rsvp_custom_welcome");
+	define("OPTION_RSVP_QUESTION", "rsvp_custom_question_text");
+	define("OPTION_RSVP_CUSTOM_YES_NO", "rsvp_custom_yes_no");
+	define("RSVP_DB_VERSION", "7");
 	define("QT_SHORT", "shortAnswer");
 	define("QT_MULTI", "multipleChoice");
 	define("QT_LONG", "longAnswer");
@@ -99,6 +102,17 @@ License: GPL
 						<td align="left"><textarea name="rsvp_custom_greeting" id="rsvp_custom_greeting" rows="5" cols="60"><?php echo htmlspecialchars(get_option(OPTION_GREETING)); ?></textarea></td>
 					</tr>
 					<tr valign="top">
+						<th scope="row"><label for="rsvp_custom_welcome">Custom Welcome:</label></th>
+						<td align="left">Default is: &quot;There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.&quot;<br />
+							<textarea name="rsvp_custom_welcome" id="rsvp_custom_welcome" rows="5" cols="60"><?php echo htmlspecialchars(get_option(OPTION_WELCOME_TEXT)); ?></textarea></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row"><label for="rsvp_custom_question_text">RSVP Question Verbiage:</label></th>
+						<td align="left">Default is: &quot;So, how about it?&quot;<br />
+							<input type="text" name="rsvp_custom_question_text" id="rsvp_custom_question_text" 
+							value="<?php echo htmlspecialchars(get_option(OPTION_RSVP_QUESTION)); ?>" size="65" /></td>
+					</tr>
+					<tr valign="top">
 						<th scope="row"><label for="rsvp_yes_verbiage">RSVP Yes Verbiage:</label></th>
 						<td align="left"><input type="text" name="rsvp_yes_verbiage" id="rsvp_yes_verbiage" 
 							value="<?php echo htmlspecialchars(get_option(OPTION_YES_VERBIAGE)); ?>" size="65" /></td>
@@ -108,6 +122,20 @@ License: GPL
 						<td align="left"><input type="text" name="rsvp_no_verbiage" id="rsvp_no_verbiage" 
 							value="<?php echo htmlspecialchars(get_option(OPTION_NO_VERBIAGE)); ?>" size="65" /></td>
 					</tr>
+					<!--<tr valign="top">
+						<th scope="row"><label for="rsvp_custom_yes_no">Custom Yes/No Questions</label></th>
+						<td align="left">
+							This option allows a user to add in multiple yes or no options for when a user rsvps. This will over ride anything specified for the "RSVP Yes Verbiage" and "RSVP No Verbiage" options. The format of each question should be in the format:<br />
+							value | Text user to see and each on it's own line.<br /><br />
+							An example:<br />
+							Yes | Yes, I will gladly come<br /> 
+							Eh | Eh, I don't really know you and I know you are only inviting me for a gift
+							<br /><br />
+							<strong>Note:</strong> If you do not set a question with a value of "Yes" and one with a value of "No" the RSVP "Yes" and "No" counts will not be correct.
+							<br /><br />
+							<textarea name="rsvp_custom_yes_no" id="rsvp_custom_yes_no" rows="5" cols="60"><?php echo htmlspecialchars(get_option(OPTION_RSVP_CUSTOM_YES_NO)); ?></textarea> 
+						</td>
+					</tr>-->
 					<tr valign="top">
 						<th scope="row"><label for="rsvp_kids_meal_verbiage">RSVP Kids Meal Verbiage:</label></th>
 						<td align="left"><input type="text" name="rsvp_kids_meal_verbiage" id="rsvp_kids_meal_verbiage" 
@@ -1153,6 +1181,9 @@ License: GPL
 		register_setting('rsvp-option-group', OPTION_NOTIFY_EMAIL);
 		register_setting('rsvp-option-group', OPTION_NOTIFY_ON_RSVP);
 		register_setting('rsvp-option-group', OPTION_DEBUG_RSVP_QUERIES);
+		register_setting('rsvp-option-group', OPTION_WELCOME_TEXT);
+		register_setting('rsvp-option-group', OPTION_RSVP_QUESTION);
+		register_setting('rsvp-option-group', OPTION_RSVP_CUSTOM_YES_NO);
 		
 		wp_register_script('jquery_table_sort', get_option("siteurl")."/wp-content/plugins/rsvp/jquery.tablednd_0_5.js");
 		wp_register_script('jquery_ui', "http://ajax.microsoft.com/ajax/jquery.ui/1.8.5/jquery-ui.js");

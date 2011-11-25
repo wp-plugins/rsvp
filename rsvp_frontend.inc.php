@@ -136,8 +136,14 @@ function rsvp_frontend_handler($text) {
 					if($attendee != null) {
 						$output = "<div>\r\n";
 						if(strtolower($attendee->rsvpStatus) == "noresponse") {
-							$output .= "<p>Hi ".htmlentities(stripslashes(utf8_decode($attendee->firstName." ".$attendee->lastName)))."!</p>".
-												"<p>There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.</p>";
+							$output .= "<p>Hi ".htmlentities(stripslashes(utf8_decode($attendee->firstName." ".$attendee->lastName)))."!</p>";
+							
+							if(trim(get_option(OPTION_WELCOME_TEXT)) != "") {
+								$output .= "<p>".trim(utf8_decode(get_option(OPTION_WELCOME_TEXT)))."</p>";
+							} else {
+								$output .= "<p>There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.</p>";
+							}
+												
 							$output .= rsvp_frontend_main_form($attendee->id);
 						} else {
 							$output .= rsvp_frontend_prompt_to_edit($attendee);
@@ -171,8 +177,14 @@ function rsvp_frontend_handler($text) {
 					// hey we found something, we should move on and print out any associated users and let them rsvp
 					$output = "<div>\r\n";
 					if(strtolower($attendee->rsvpStatus) == "noresponse") {
-						$output .= "<p>Hi ".htmlentities(stripslashes(utf8_decode($attendee->firstName." ".$attendee->lastName)))."!</p>".
-											"<p>There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.</p>";
+						$output .= "<p>Hi ".htmlentities(stripslashes(utf8_decode($attendee->firstName." ".$attendee->lastName)))."!</p>";
+						
+						if(trim(get_option(OPTION_WELCOME_TEXT)) != "") {
+							$output .= "<p>".trim(utf8_decode(get_option(OPTION_WELCOME_TEXT)))."</p>";
+						} else {
+							$output .= "<p>There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.</p>";
+						}
+						
 						$output .= rsvp_frontend_main_form($attendee->id);
 					} else {
 						$output .= rsvp_frontend_prompt_to_edit($attendee);
@@ -345,7 +357,13 @@ function rsvp_frontend_main_form($attendeeID) {
 	$noteVerbiage = ((trim(get_option(OPTION_NOTE_VERBIAGE)) != "") ? get_option(OPTION_NOTE_VERBIAGE) : 
 		"If you have any <strong style=\"color:red;\">food allergies</strong>, please indicate what they are in the &quot;notes&quot; section below.  Or, if you just want to send us a note, please feel free.  If you have any questions, please send us an email.");
 	$form .= "  <tr>\r\n
-								<td align=\"left\">So, how about it?</td>
+								<td align=\"left\">";
+								if(trim(get_option(OPTION_RSVP_QUESTION)) != "") {
+									$form .= trim(utf8_decode(get_option(OPTION_RSVP_QUESTION)));
+								} else {
+									$form .= "So, how about it?";
+								}
+	$form .= "</td>
 							</tr>\r\n
 							<tr>\r\n
 								<td colspan=\"2\" align=\"left\"><input type=\"radio\" name=\"mainRsvp\" value=\"Y\" id=\"mainRsvpY\" ".

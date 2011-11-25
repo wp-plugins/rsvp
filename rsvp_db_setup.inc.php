@@ -8,7 +8,7 @@
 		`lastName` VARCHAR( 100 ) NOT NULL ,
 		`rsvpDate` DATE NULL ,
 		`rsvpStatus` ENUM( 'Yes', 'No', 'NoResponse' ) NOT NULL DEFAULT 'NoResponse',
-		`note` TEXT NOT NULL ,
+		`note` TEXT NULL,
 		`kidsMeal` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N',
 		`additionalAttendee` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N',
 		`veggieMeal` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N', 
