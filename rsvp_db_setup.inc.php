@@ -110,5 +110,11 @@
 		$sql = "ALTER TABLE `$table` ADD `permissionLevel` ENUM( 'public', 'private' ) NOT NULL DEFAULT 'public';";
 		$wpdb->query($sql);
 	}
+	
+	if((int)$installed_ver < 9) {
+		$table = ATTENDEES_TABLE;
+		$sql = "ALTER TABLE `$table` ADD `passcode` VARCHAR(50) NOT NULL DEFAULT '';";
+		$wpdb->query($sql);
+	}
 	update_option( "rsvp_db_version", RSVP_DB_VERSION);
 ?>

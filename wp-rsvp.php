@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.3.2
+ * @version 1.4.0
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.3.2
+Version: 1.4.0
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -54,7 +54,8 @@ License: GPL
 	define("OPTION_WELCOME_TEXT", "rsvp_custom_welcome");
 	define("OPTION_RSVP_QUESTION", "rsvp_custom_question_text");
 	define("OPTION_RSVP_CUSTOM_YES_NO", "rsvp_custom_yes_no");
-	define("RSVP_DB_VERSION", "7");
+	define("OPTION_RSVP_PASSCODE", "rsvp_passcode");
+	define("RSVP_DB_VERSION", "9");
 	define("QT_SHORT", "shortAnswer");
 	define("QT_MULTI", "multipleChoice");
 	define("QT_LONG", "longAnswer");
@@ -75,8 +76,37 @@ License: GPL
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		require_once("rsvp_db_setup.inc.php");
 	}
+	
+	/**
+	 *
+	 */
+	function rsvp_generate_passcode() {
+		$length = 6;
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyz';
+		$passcode = "";
+
+    for ($p = 0; $p < $length; $p++) {
+        $passcode .= $characters[mt_rand(0, strlen($characters))];
+    }
+
+    return $passcode;
+	}
 
 	function rsvp_admin_guestlist_options() {
+		
+		if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+			global $wpdb;
+			$sql = "SELECT id, passcode FROM ".ATTENDEES_TABLE." WHERE passcode = ''";
+			$attendees = $wpdb->get_results($sql);
+			foreach($attendees as $a) {
+				$newPasscode = rsvp_generate_passcode();
+				$wpdb->update(ATTENDEES_TABLE, 
+											array("passcode" => rsvp_generate_passcode()), 
+											array("id" => $a->id), 
+											array("%s"), 
+											array("%d"));
+			}
+		}
 ?>
 		<script type="text/javascript" language="javascript">
 			jQuery(document).ready(function() {
@@ -179,6 +209,11 @@ License: GPL
 						<th scope="row"><label for="rsvp_notify_email_address">Email address to notify</label></th>
 						<td align="left"><input type="text" name="rsvp_notify_email_address" id="rsvp_notify_email_address" value="<?php echo htmlspecialchars(get_option(OPTION_NOTIFY_EMAIL)); ?>"/></td>
 					</tr>
+					<tr>
+						<th scope="ropw"><label for="<?php echo OPTION_RSVP_PASSCODE; ?>">Require a Passcode to RSVP:</label></th>
+						<td align="left"><input type="checkbox" name="<?php echo OPTION_RSVP_PASSCODE; ?>" id="<?php echo OPTION_RSVP_PASSCODE; ?>" value="Y" 
+							 <?php echo ((get_option(OPTION_RSVP_PASSCODE) == "Y") ? " checked=\"checked\"" : ""); ?> /></td>
+					</tr>
 					<tr valign="top">
 						<th scope="row"><label for="rsvp_debug_queries">Debug RSVP Queries:</label></th>
 						<td align="left"><input type="checkbox" name="rsvp_debug_queries" id="rsvp_debug_queries" 
@@ -213,7 +248,7 @@ License: GPL
 			}
 		}
 		
-		$sql = "SELECT id, firstName, lastName, rsvpStatus, note, kidsMeal, additionalAttendee, veggieMeal, personalGreeting FROM ".ATTENDEES_TABLE;
+		$sql = "SELECT id, firstName, lastName, rsvpStatus, note, kidsMeal, additionalAttendee, veggieMeal, personalGreeting, passcode FROM ".ATTENDEES_TABLE;
 		$orderBy = " lastName, firstName";
 		if(isset($_GET['sort'])) {
 			if(strToLower($_GET['sort']) == "rsvpstatus") {
@@ -345,6 +380,14 @@ License: GPL
 						<th scope="col" id="customMessage" class="manage-column column-title" style="">Custom Message</th>
 						<th scope="col" id="note" class="manage-column column-title" style="">Note</th>
 						<?php
+						if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+						?>
+							<th scope="col" id="passcode" class="manage-column column-title" style="">Passcode</th>
+						<?php
+						}
+						
+						?>
+						<?php
 							$qRs = $wpdb->get_results("SELECT id, question FROM ".QUESTIONS_TABLE." ORDER BY sortOrder, id");
 							if(count($qRs) > 0) {
 								foreach($qRs as $q) {
@@ -399,6 +442,11 @@ License: GPL
 							?></td>
 							<td><?php echo nl2br(stripslashes(trim($attendee->note))); ?></td>
 							<?php
+							if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+							?>
+								<td><?php echo $attendee->passcode; ?></td>
+							<?php	
+							}
 								$sql = "SELECT question, answer FROM ".QUESTIONS_TABLE." q 
 									LEFT JOIN ".ATTENDEE_ANSWERS." ans ON q.id = ans.questionID AND ans.attendeeID = %d 
 									ORDER BY q.sortOrder";
@@ -660,6 +708,14 @@ License: GPL
 					}
 				}
 			}
+			
+			if((get_option(OPTION_RSVP_PASSCODE) == "Y") && !empty($_POST['passcode'])) {
+				$wpdb->update(ATTENDEES_TABLE, 
+											array("passcode" => trim($_POST['passcode'])), 
+											array("id"=>$attendeeId), 
+											array("%s"), 
+											array("%d"));
+			}
 		?>
 			<p>Attendee <?php echo htmlentities(utf8_decode(stripslashes($_POST['firstName']." ".$_POST['lastName'])));?> has been successfully saved</p>
 			<p>
@@ -675,15 +731,17 @@ License: GPL
 			$lastName = "";
 			$personalGreeting = "";
 			$rsvpStatus = "NoResponse";
+			$passcode = "";
 			
 			if(isset($_GET['id']) && is_numeric($_GET['id'])) {
-				$attendee = $wpdb->get_row("SELECT id, firstName, lastName, personalGreeting, rsvpStatus FROM ".ATTENDEES_TABLE." WHERE id = ".$_GET['id']);
+				$attendee = $wpdb->get_row("SELECT id, firstName, lastName, personalGreeting, rsvpStatus, passcode FROM ".ATTENDEES_TABLE." WHERE id = ".$_GET['id']);
 				if($attendee != null) {
 					$_SESSION[EDIT_SESSION_KEY] = $attendee->id;
 					$firstName = utf8_decode(stripslashes($attendee->firstName));
 					$lastName = utf8_decode(stripslashes($attendee->lastName));
 					$personalGreeting = stripslashes($attendee->personalGreeting);
 					$rsvpStatus = $attendee->rsvpStatus;
+					$passcode = stripslashes($attendee->passcode);
 					
 					// Get the associated attendees and add them to an array
 					$associations = $wpdb->get_results("SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeId = ".$attendee->id.
@@ -709,6 +767,16 @@ License: GPL
 						<th scope="row"><label for="lastName">Last Name:</label></th>
 						<td align="left"><input type="text" name="lastName" id="lastName" size="30" value="<?php echo htmlentities($lastName); ?>" /></td>
 					</tr>
+					<?php
+					if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+					?>
+						<tr valign="top">
+							<th scope="row"><label for="passcode">Passcode:</label></th>
+							<td align="left"><input type="text" name="passcode" id="passcode" size="30" value="<?php echo htmlentities($passcode); ?>" maxlength="6" /></td>
+						</tr>
+					<?php	
+					}					
+					?>
 					<tr>
 						<th scope="row"><label for="rsvpStatus">RSVP Status</label></th>
 						<td align="left">
@@ -1184,6 +1252,7 @@ License: GPL
 		register_setting('rsvp-option-group', OPTION_WELCOME_TEXT);
 		register_setting('rsvp-option-group', OPTION_RSVP_QUESTION);
 		register_setting('rsvp-option-group', OPTION_RSVP_CUSTOM_YES_NO);
+		register_setting('rsvp-option-group', OPTION_RSVP_PASSCODE);
 		
 		wp_register_script('jquery_table_sort', get_option("siteurl")."/wp-content/plugins/rsvp/jquery.tablednd_0_5.js");
 		wp_register_script('jquery_ui', "http://ajax.microsoft.com/ajax/jquery.ui/1.8.5/jquery-ui.js");

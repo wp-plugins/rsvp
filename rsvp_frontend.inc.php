@@ -129,7 +129,6 @@ function rsvp_frontend_handler($text) {
 				break;
 			case("foundattendee") :
 				if(is_numeric($_POST['attendeeID']) && ($_POST['attendeeID'] > 0)) {
-					// Try to find the user.
 					$attendee = $wpdb->get_row($wpdb->prepare("SELECT id, firstName, lastName, rsvpStatus 
 																										 FROM ".ATTENDEES_TABLE." 
 																										 WHERE id = %d", $_POST['attendeeID']));
@@ -159,6 +158,12 @@ function rsvp_frontend_handler($text) {
 			case("find") :
 				$_SESSION['rsvpFirstName'] = $_POST['firstName'];
 				$_SESSION['rsvpLastName'] = $_POST['lastName'];
+				$passcode = "";
+				if(isset($_POST['passcode'])) {
+					$passcode = $_POST['passcode'];
+					$_SESSION['rsvpPasscode'] = $_POST['passcode'];
+				}
+				
 				$firstName = $_POST['firstName'];
 				$lastName = $_POST['lastName'];
 				
@@ -170,9 +175,16 @@ function rsvp_frontend_handler($text) {
 				}
 				
 				// Try to find the user.
-				$attendee = $wpdb->get_row($wpdb->prepare("SELECT id, firstName, lastName, rsvpStatus 
-																									 FROM ".ATTENDEES_TABLE." 
-																									 WHERE firstName = %s AND lastName = %s", $firstName, $lastName));
+				if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+					$attendee = $wpdb->get_row($wpdb->prepare("SELECT id, firstName, lastName, rsvpStatus 
+																										 FROM ".ATTENDEES_TABLE." 
+																										 WHERE firstName = %s AND lastName = %s AND passcode = %s", $firstName, $lastName, $passcode));
+				} else {
+					$attendee = $wpdb->get_row($wpdb->prepare("SELECT id, firstName, lastName, rsvpStatus 
+																										 FROM ".ATTENDEES_TABLE." 
+																										 WHERE firstName = %s AND lastName = %s", $firstName, $lastName));
+				}
+				
 				if($attendee != null) {
 					// hey we found something, we should move on and print out any associated users and let them rsvp
 					$output = "<div>\r\n";
@@ -686,11 +698,15 @@ function rsvp_frontend_greeting() {
 	$output = "<p>Please enter your first and last name to RSVP.</p>";
 	$firstName = "";
 	$lastName = "";
+	$passcode = "";
 	if(isset($_SESSION['rsvpFirstName'])) {
 		$firstName = $_SESSION['rsvpFirstName'];
 	}
 	if(isset($_SESSION['rsvpLastName'])) {
 		$lastName = $_SESSION['rsvpLastName'];
+	}
+	if(isset($_SESSION['rsvpPasscode'])) {
+		$passcode = $_SESSION['rsvpPasscode'];
 	}
 	if(!empty($customGreeting)) {
 		$output = nl2br($customGreeting);
@@ -706,6 +722,10 @@ function rsvp_frontend_greeting() {
 								 <input type=\"text\" name=\"firstName\" id=\"firstName\" size=\"30\" value=\"".htmlentities($firstName)."\" class=\"required\" /></p>\r\n";
 	$output .= "<p><label for=\"lastName\">Last Name:</label> 
 								 <input type=\"text\" name=\"lastName\" id=\"lastName\" size=\"30\" value=\"".htmlentities($lastName)."\" class=\"required\" /></p>\r\n";
+	if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+		$output .= "<p><label for=\"passcode\">Passcode:</label> 
+									 <input type=\"text\" name=\"passcode\" id=\"passcode\" size=\"30\" value=\"".htmlentities($passcode)."\" class=\"required\" /></p>\r\n";
+	}
 	$output .= "<p><input type=\"submit\" value=\"Register\" /></p>";
 	$output .= "</form>\r\n";
 	
