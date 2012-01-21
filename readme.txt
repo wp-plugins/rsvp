@@ -4,7 +4,7 @@ Donate link: http://www.amazon.com/wishlist/2Q3LK1E1O3ZQ6
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.7
 Tested up to: 3.3.1
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -58,6 +58,10 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.4.1 = 
+* Fixed a bug where the passcode field would not always get created when upgrading.  This caused the attendee list to now display in the admin area
+* Also added some finishing touches to the passcode feature as it was released a little bit too soon
 
 = 1.4.0 = 
 * Added in the option to require a passcode when RSVPing. 

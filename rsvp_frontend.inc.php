@@ -1,6 +1,7 @@
 <?php 
 function rsvp_frontend_handler($text) {
 	global $wpdb; 
+	$passcodeOptionEnabled = (get_option(OPTION_RSVP_PASSCODE) == "Y") ? true : false;
 	
 	//QUIT if the replacement string doesn't exist
 	if (!strstr($text,RSVP_FRONTEND_TEXT_CHECK)) return $text;
@@ -175,7 +176,7 @@ function rsvp_frontend_handler($text) {
 				}
 				
 				// Try to find the user.
-				if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+				if($passcodeOptionEnabled) {
 					$attendee = $wpdb->get_row($wpdb->prepare("SELECT id, firstName, lastName, rsvpStatus 
 																										 FROM ".ATTENDEES_TABLE." 
 																										 WHERE firstName = %s AND lastName = %s AND passcode = %s", $firstName, $lastName, $passcode));
@@ -206,25 +207,27 @@ function rsvp_frontend_handler($text) {
 				
 				// We did not find anyone let's try and do a rough search
 				$attendees = null;
-				for($i = 3; $i >= 1; $i--) {
-					$truncFirstName = rsvp_chomp_name($firstName, $i);
-					$attendees = $wpdb->get_results("SELECT id, firstName, lastName, rsvpStatus FROM ".ATTENDEES_TABLE." 
-																					 WHERE lastName = '".mysql_real_escape_string($lastName)."' AND firstName LIKE '".mysql_real_escape_string($truncFirstName)."%'");
-					if(count($attendees) > 0) {
-						$output = "<p><strong>We could not find an exact match but could any of the below entries be you?</strong></p>";
-						foreach($attendees as $a) {
-							$output .= "<form method=\"post\">\r\n
-											<input type=\"hidden\" name=\"rsvpStep\" value=\"foundattendee\" />\r\n
-											<input type=\"hidden\" name=\"attendeeID\" value=\"".$a->id."\" />\r\n
-											<p style=\"text-align:left;\">\r\n
-									".htmlentities(utf8_decode($a->firstName." ".$a->lastName))." 
-									<input type=\"submit\" value=\"RSVP\" />\r\n
-									</p>\r\n</form>\r\n";
-						}
+				if(!$passcodeOptionEnabled) {
+					for($i = 3; $i >= 1; $i--) {
+						$truncFirstName = rsvp_chomp_name($firstName, $i);
+						$attendees = $wpdb->get_results("SELECT id, firstName, lastName, rsvpStatus FROM ".ATTENDEES_TABLE." 
+																						 WHERE lastName = '".mysql_real_escape_string($lastName)."' AND firstName LIKE '".mysql_real_escape_string($truncFirstName)."%'");
+						if(count($attendees) > 0) {
+							$output = "<p><strong>We could not find an exact match but could any of the below entries be you?</strong></p>";
+							foreach($attendees as $a) {
+								$output .= "<form method=\"post\">\r\n
+												<input type=\"hidden\" name=\"rsvpStep\" value=\"foundattendee\" />\r\n
+												<input type=\"hidden\" name=\"attendeeID\" value=\"".$a->id."\" />\r\n
+												<p style=\"text-align:left;\">\r\n
+										".htmlentities(utf8_decode($a->firstName." ".$a->lastName))." 
+										<input type=\"submit\" value=\"RSVP\" />\r\n
+										</p>\r\n</form>\r\n";
+							}
 						
-						return $output;
-					} else {
-						$i = strlen($truncFirstName);
+							return $output;
+						} else {
+							$i = strlen($truncFirstName);
+						}
 					}
 				}
 				return "<p><strong>We were unable to find anyone with a name of ".htmlentities(utf8_decode($firstName." ".$lastName))."</strong></p>\r\n".rsvp_frontend_greeting();

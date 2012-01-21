@@ -112,9 +112,7 @@
 	}
 	
 	if((int)$installed_ver < 9) {
-		$table = ATTENDEES_TABLE;
-		$sql = "ALTER TABLE `$table` ADD `passcode` VARCHAR(50) NOT NULL DEFAULT '';";
-		$wpdb->query($sql);
+		rsvp_install_passcode_field();
 	}
 	update_option( "rsvp_db_version", RSVP_DB_VERSION);
 ?>

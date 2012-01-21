@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.4.0
+ * @version 1.4.1
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.4.0
+Version: 1.4.1
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -77,8 +77,18 @@ License: GPL
 		require_once("rsvp_db_setup.inc.php");
 	}
 	
+	function rsvp_install_passcode_field() {
+		global $wpdb;
+		$table = ATTENDEES_TABLE;
+		$sql = "SHOW COLUMNS FROM `$table` LIKE 'passcode'";
+		if(!$wpdb->get_results($sql)) {
+			$sql = "ALTER TABLE `$table` ADD `passcode` VARCHAR(50) NOT NULL DEFAULT '';";
+			$wpdb->query($sql);
+		}
+	}
+	
 	/**
-	 *
+	 * This generates a random 6 character passcode to be used for guests when the option is enabled.
 	 */
 	function rsvp_generate_passcode() {
 		$length = 6;
@@ -96,6 +106,9 @@ License: GPL
 		
 		if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
 			global $wpdb;
+			
+			rsvp_install_passcode_field();
+			
 			$sql = "SELECT id, passcode FROM ".ATTENDEES_TABLE." WHERE passcode = ''";
 			$attendees = $wpdb->get_results($sql);
 			foreach($attendees as $a) {
@@ -235,6 +248,7 @@ License: GPL
 		if(get_option("rsvp_db_version") != RSVP_DB_VERSION) {
 			rsvp_database_setup();
 		}
+		rsvp_install_passcode_field();
 		
 		if((count($_POST) > 0) && ($_POST['rsvp-bulk-action'] == "delete") && (is_array($_POST['attendee']) && (count($_POST['attendee']) > 0))) {
 			foreach($_POST['attendee'] as $attendee) {
@@ -677,6 +691,8 @@ License: GPL
 		global $wpdb;
 		if((count($_POST) > 0) && !empty($_POST['firstName']) && !empty($_POST['lastName'])) {
 			check_admin_referer('rsvp_add_guest');
+			$passcode = (isset($_POST['passcode'])) ? $_POST['passcode'] : "";
+			
 			if(isset($_SESSION[EDIT_SESSION_KEY]) && is_numeric($_SESSION[EDIT_SESSION_KEY])) {
 				$wpdb->update(ATTENDEES_TABLE, 
 											array("firstName" => trim($_POST['firstName']), 
@@ -709,9 +725,12 @@ License: GPL
 				}
 			}
 			
-			if((get_option(OPTION_RSVP_PASSCODE) == "Y") && !empty($_POST['passcode'])) {
+			if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+				if(empty($passcode)) {
+					$passcode = rsvp_generate_passcode();
+				}
 				$wpdb->update(ATTENDEES_TABLE, 
-											array("passcode" => trim($_POST['passcode'])), 
+											array("passcode" => trim($passcode)), 
 											array("id"=>$attendeeId), 
 											array("%s"), 
 											array("%d"));
