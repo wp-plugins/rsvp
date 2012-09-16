@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.4.1
+ * @version 1.5.0
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.4.1
+Version: 1.5.0
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -249,7 +249,6 @@ License: GPL
 			rsvp_database_setup();
 		}
 		rsvp_install_passcode_field();
-		
 		if((count($_POST) > 0) && ($_POST['rsvp-bulk-action'] == "delete") && (is_array($_POST['attendee']) && (count($_POST['attendee']) > 0))) {
 			foreach($_POST['attendee'] as $attendee) {
 				if(is_numeric($attendee) && ($attendee > 0)) {
@@ -339,54 +338,54 @@ License: GPL
 						<th scope="col" class="manage-column column-cb check-column" style=""><input type="checkbox" id="cb" /></th>
 						<th scope="col" id="attendeeName" class="manage-column column-title" style="">Attendee</a> &nbsp;
 							<a href="admin.php?page=rsvp-top-level&amp;sort=attendee&amp;sortDirection=asc">
-								<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/uparrow<?php 
+								<img src="<?php echo plugins_url(); ?>/rsvp/uparrow<?php 
 									echo ((($sort == "attendee") && ($sortDirection == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 									alt="Sort Ascending Attendee Status" title="Sort Ascending Attendee Status" border="0"></a> &nbsp;
 							<a href="admin.php?page=rsvp-top-level&amp;sort=attendee&amp;sortDirection=desc">
-								<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/downarrow<?php 
+								<img src="<?php echo plugins_url(); ?>/rsvp/downarrow<?php 
 									echo ((($sort == "attendee") && ($sortDirection == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 									alt="Sort Descending Attendee Status" title="Sort Descending Attendee Status" border="0"></a>
 						</th>			
 						<th scope="col" id="rsvpStatus" class="manage-column column-title" style="">RSVP Status &nbsp;
 							<a href="admin.php?page=rsvp-top-level&amp;sort=rsvpStatus&amp;sortDirection=asc">
-								<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/uparrow<?php 
+								<img src="<?php echo plugins_url(); ?>/rsvp/uparrow<?php 
 									echo ((($sort == "rsvpStatus") && ($sortDirection == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 									alt="Sort Ascending RSVP Status" title="Sort Ascending RSVP Status" border="0"></a> &nbsp;
 							<a href="admin.php?page=rsvp-top-level&amp;sort=rsvpStatus&amp;sortDirection=desc">
-								<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/downarrow<?php 
+								<img src="<?php echo plugins_url(); ?>/rsvp/downarrow<?php 
 									echo ((($sort == "rsvpStatus") && ($sortDirection == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 									alt="Sort Descending RSVP Status" title="Sort Descending RSVP Status" border="0"></a>
 						</th>
 						<?php if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {?>
 						<th scope="col" id="kidsMeal" class="manage-column column-title" style="">Kids Meal	 &nbsp;
 								<a href="admin.php?page=rsvp-top-level&amp;sort=kidsMeal&amp;sortDirection=asc">
-									<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/uparrow<?php 
+									<img src="<?php echo plugins_url(); ?>/rsvp/uparrow<?php 
 										echo ((($sort == "kidsMeal") && ($sortDirection == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 										alt="Sort Ascending Kids Meal Status" title="Sort Ascending Kids Meal Status" border="0"></a> &nbsp;
 								<a href="admin.php?page=rsvp-top-level&amp;sort=kidsMeal&amp;sortDirection=desc">
-									<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/downarrow<?php 
+									<img src="<?php echo plugins_url(); ?>/rsvp/downarrow<?php 
 										echo ((($sort == "kidsMeal") && ($sortDirection == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 										alt="Sort Descending Kids Meal Status" title="Sort Descending Kids Meal Status" border="0"></a>
 						</th>
 						<?php } ?>
 						<th scope="col" id="additionalAttendee" class="manage-column column-title" style="">Additional Attendee		 &nbsp;
 									<a href="admin.php?page=rsvp-top-level&amp;sort=additional&amp;sortDirection=asc">
-										<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/uparrow<?php 
+										<img src="<?php echo plugins_url(); ?>/rsvp/uparrow<?php 
 											echo ((($sort == "additional") && ($sortDirection == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 											alt="Sort Ascending Additional Attendees Status" title="Sort Ascending Additional Attendees Status" border="0"></a> &nbsp;
 									<a href="admin.php?page=rsvp-top-level&amp;sort=additional&amp;sortDirection=desc">
-										<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/downarrow<?php 
+										<img src="<?php echo plugins_url(); ?>/rsvp/downarrow<?php 
 											echo ((($sort == "additional") && ($sortDirection == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 											alt="Sort Descending Additional Attendees Status" title="Sort Descending Additional Atttendees Status" border="0"></a>
 						</th>
 						<?php if(get_option(OPTION_HIDE_VEGGIE) != "Y") {?>
 						<th scope="col" id="veggieMeal" class="manage-column column-title" style="">Vegetarian			 &nbsp;
 										<a href="admin.php?page=rsvp-top-level&amp;sort=vegetarian&amp;sortDirection=asc">
-											<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/uparrow<?php 
+											<img src="<?php echo plugins_url(); ?>/rsvp/uparrow<?php 
 												echo ((($sort == "vegetarian") && ($sortDirection == "asc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 												alt="Sort Ascending Vegetarian Status" title="Sort Ascending Vegetarian Status" border="0"></a> &nbsp;
 										<a href="admin.php?page=rsvp-top-level&amp;sort=vegetarian&amp;sortDirection=desc">
-											<img src="<?php echo get_option("siteurl"); ?>/wp-content/plugins/rsvp/downarrow<?php 
+											<img src="<?php echo plugins_url(); ?>/rsvp/downarrow<?php 
 												echo ((($sort == "vegetarian") && ($sortDirection == "desc")) ? "_selected" : ""); ?>.gif" width="11" height="9" 
 												alt="Sort Descending Vegetarian Status" title="Sort Descending Vegetarian Status" border="0"></a>
 						</th>
@@ -424,7 +423,7 @@ License: GPL
 						<tr class="<?php echo (($i % 2 == 0) ? "alternate" : ""); ?> author-self">
 							<th scope="row" class="check-column"><input type="checkbox" name="attendee[]" value="<?php echo $attendee->id; ?>" /></th>						
 							<td>
-								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-guest&amp;id=<?php echo $attendee->id; ?>"><?php echo htmlentities(utf8_decode(stripslashes($attendee->firstName)." ".stripslashes($attendee->lastName))); ?></a>
+								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-guest&amp;id=<?php echo $attendee->id; ?>"><?php echo htmlentities(stripslashes($attendee->firstName)." ".stripslashes($attendee->lastName)); ?></a>
 							</td>
 							<td><?php echo $attendee->rsvpStatus; ?></td>
 							<?php if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {?>
@@ -468,7 +467,7 @@ License: GPL
 								if(count($aRs) > 0) {
 									foreach($aRs as $a) {
 							?>
-									<td><?php echo htmlentities(utf8_decode(stripslashes($a->answer))); ?></td>
+									<td><?php echo htmlentities(stripslashes($a->answer)); ?></td>
 							<?php
 									}
 								}
@@ -481,7 +480,7 @@ License: GPL
 							
 								$associations = $wpdb->get_results($wpdb->prepare($sql, $attendee->id, $attendee->id));
 								foreach($associations as $a) {
-									echo htmlentities(stripslashes(utf8_decode($a->firstName." ".$a->lastName)))."<br />";
+									echo htmlentities(stripslashes($a->firstName." ".$a->lastName))."<br />";
 								}
 							?>
 							</td>
@@ -540,7 +539,7 @@ License: GPL
 			
 			$csv .= "\r\n";
 			foreach($attendees as $a) {
-				$csv .= "\"".utf8_decode(stripslashes($a->firstName." ".$a->lastName))."\",\"".($a->rsvpStatus)."\",";
+				$csv .= "\"".stripslashes($a->firstName." ".$a->lastName)."\",\"".($a->rsvpStatus)."\",";
 				
 				if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {
 					$csv .= "\"".(($a->kidsMeal == "Y") ? "Yes" : "No")."\",";
@@ -736,7 +735,7 @@ License: GPL
 											array("%d"));
 			}
 		?>
-			<p>Attendee <?php echo htmlentities(utf8_decode(stripslashes($_POST['firstName']." ".$_POST['lastName'])));?> has been successfully saved</p>
+			<p>Attendee <?php echo htmlentities(stripslashes($_POST['firstName']." ".$_POST['lastName']));?> has been successfully saved</p>
 			<p>
 				<a href="<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?page=rsvp-top-level">Continue to Attendee List</a> | 
 				<a href="<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?page=rsvp-admin-guest">Add a Guest</a> 
@@ -744,7 +743,7 @@ License: GPL
 	<?php
 		} else {
 			$attendee = null;
-			session_unregister(EDIT_SESSION_KEY);
+			unset($_SESSION[EDIT_SESSION_KEY]);
 			$associatedAttendees = array();
 			$firstName = "";
 			$lastName = "";
@@ -756,8 +755,8 @@ License: GPL
 				$attendee = $wpdb->get_row("SELECT id, firstName, lastName, personalGreeting, rsvpStatus, passcode FROM ".ATTENDEES_TABLE." WHERE id = ".$_GET['id']);
 				if($attendee != null) {
 					$_SESSION[EDIT_SESSION_KEY] = $attendee->id;
-					$firstName = utf8_decode(stripslashes($attendee->firstName));
-					$lastName = utf8_decode(stripslashes($attendee->lastName));
+					$firstName = stripslashes($attendee->firstName);
+					$lastName = stripslashes($attendee->lastName);
 					$personalGreeting = stripslashes($attendee->personalGreeting);
 					$rsvpStatus = $attendee->rsvpStatus;
 					$passcode = stripslashes($attendee->passcode);
@@ -826,7 +825,7 @@ License: GPL
 										if($a->id != $_SESSION[EDIT_SESSION_KEY]) {
 								?>
 											<option value="<?php echo $a->id; ?>" 
-															<?php echo ((in_array($a->id, $associatedAttendees)) ? "selected=\"selected\"" : ""); ?>><?php echo htmlentities(utf8_decode(stripslashes($a->firstName)." ".stripslashes($a->lastName))); ?></option>
+															<?php echo ((in_array($a->id, $associatedAttendees)) ? "selected=\"selected\"" : ""); ?>><?php echo htmlentities(stripslashes($a->firstName)." ".stripslashes($a->lastName)); ?></option>
 								<?php
 										}
 									}
@@ -1056,7 +1055,7 @@ License: GPL
 			$questionId = 0;
 			$permissionLevel = "public";
 			$savedAttendees = array();
-			session_unregister(EDIT_QUESTION_KEY);
+			unset($_SESSION[EDIT_QUESTION_KEY]);
 			if(isset($_GET['id']) && is_numeric($_GET['id'])) {
 				$qRs = $wpdb->get_results($wpdb->prepare("SELECT id, question, questionTypeID, permissionLevel FROM ".QUESTIONS_TABLE." WHERE id = %d", $_GET['id']));
 				if(count($qRs) > 0) {
@@ -1193,7 +1192,7 @@ License: GPL
 									foreach($attendees as $a) {
 								?>
 									<option value="<?php echo $a->id; ?>" 
-													<?php echo ((in_array($a->id, $savedAttendees)) ? " selected=\"selected\"" : ""); ?>><?php echo htmlentities(utf8_decode(stripslashes($a->firstName)." ".stripslashes($a->lastName))); ?></option>
+													<?php echo ((in_array($a->id, $savedAttendees)) ? " selected=\"selected\"" : ""); ?>><?php echo htmlentities(stripslashes($a->firstName)." ".stripslashes($a->lastName)); ?></option>
 								<?php
 									}
 								?>
@@ -1214,17 +1213,19 @@ License: GPL
 	                   'rsvp-options',		//current file
 	                   'rsvp_admin_guestlist_options'	//options function above
 	                   );
-		add_menu_page("RSVP Plugin", 
+		$page = add_menu_page("RSVP Plugin", 
 									"RSVP Plugin", 
 									"publish_posts", 
 									"rsvp-top-level", 
 									"rsvp_admin_guestlist");
-		add_submenu_page("rsvp-top-level", 
+		add_action('admin_print_scripts-' . $page, 'rsvp_admin_scripts'); 
+		$page = add_submenu_page("rsvp-top-level", 
 										 "Add Guest",
 										 "Add Guest",
 										 "publish_posts", 
 										 "rsvp-admin-guest",
 										 "rsvp_admin_guest");
+		add_action('admin_print_scripts-' . $page, 'rsvp_admin_scripts'); 
 		add_submenu_page("rsvp-top-level", 
 										 "RSVP Export",
 										 "RSVP Export",
@@ -1237,18 +1238,21 @@ License: GPL
 										 "publish_posts", 
 										 "rsvp-admin-import",
 										 "rsvp_admin_import");
-		add_submenu_page("rsvp-top-level", 
+		$page = add_submenu_page("rsvp-top-level", 
 										 "Custom Questions",
 										 "Custom Questions",
 										 "publish_posts", 
 										 "rsvp-admin-questions",
 										 "rsvp_admin_questions");
-		add_submenu_page("rsvp-top-level", 
+		add_action('admin_print_scripts-' . $page, 'rsvp_admin_scripts'); 
+		$page = add_submenu_page("rsvp-top-level", 
 										 "Add Custom Question",
 										 "Add Custom Question",
 										 "publish_posts", 
 										 "rsvp-admin-custom-question",
 										 "rsvp_admin_custom_question");
+										 
+        add_action('admin_print_scripts-' . $page, 'rsvp_admin_scripts'); 
 	}
 	
 	function rsvp_register_settings() {
@@ -1273,20 +1277,19 @@ License: GPL
 		register_setting('rsvp-option-group', OPTION_RSVP_CUSTOM_YES_NO);
 		register_setting('rsvp-option-group', OPTION_RSVP_PASSCODE);
 		
-		wp_register_script('jquery_table_sort', get_option("siteurl")."/wp-content/plugins/rsvp/jquery.tablednd_0_5.js");
-		wp_register_script('jquery_ui', "http://ajax.microsoft.com/ajax/jquery.ui/1.8.5/jquery-ui.js");
-		
+		wp_register_script('jquery_table_sort', plugins_url('jquery.tablednd_0_5.js',__FILE__));
+		wp_register_script('jquery_ui', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.ui/1.8.5/jquery-ui.js");
+		wp_register_style('jquery_ui_stylesheet', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.ui/1.8.5/themes/redmond/jquery-ui.css");
+	}
+	
+	function rsvp_admin_scripts() {
 		wp_enqueue_script("jquery_table_sort");
 		wp_enqueue_script("jquery_ui");
-		
-		wp_register_style('jquery_ui_stylesheet', "http://ajax.microsoft.com/ajax/jquery.ui/1.8.5/themes/redmond/jquery-ui.css");
 		wp_enqueue_style( 'jquery_ui_stylesheet');
 	}
 	
 	function rsvp_init() {
-		wp_register_script('jquery_validate', "http://ajax.microsoft.com/ajax/jquery.validate/1.5.5/jquery.validate.min.js");
-		
-		
+		wp_register_script('jquery_validate', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.validate/1.5.5/jquery.validate.min.js");
 		wp_enqueue_script('jquery');
 		wp_enqueue_script('jquery_validate');
 	}
@@ -1299,6 +1302,18 @@ License: GPL
 			$wpdb->print_error();
 			echo "<br />";
 		}
+	}
+	
+	/*
+	This function checks to see if the page is running over SSL/HTTPs and will return the proper HTTP protocol.
+	
+	Postcondition: The caller will receive the proper HTTP protocol to use at the beginning of a URL. 
+	*/
+	function rsvp_getHttpProtocol() {
+		if(isset($_SERVER['HTTPS'])  && (trim($_SERVER['HTTPS']) != "")) {
+			return "https";
+		}
+		return "http";
 	}
 	
 	add_action('admin_menu', 'rsvp_modify_menu');

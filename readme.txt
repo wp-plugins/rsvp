@@ -4,7 +4,7 @@ Donate link: http://www.amazon.com/wishlist/2Q3LK1E1O3ZQ6
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.7
 Tested up to: 3.3.1
-Stable tag: 1.4.1
+Stable tag: 1.5.0
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -58,6 +58,12 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.5.0 =
+* Made it so the plugin would only replace the plugin short code and not all of the page's content
+* Changed it so when the site is running over SSL the included javascript files would also be loaded over SSL
+* Removed deprecated calls to session_unregister so it would work correct on PHP 5.4 and above
+* Changed it so on new installs of RSVP fields that have free-form text will always be UTF-8 to minimize issues with unicode characters
 
 = 1.4.1 = 
 * Fixed a bug where the passcode field would not always get created when upgrading.  This caused the attendee list to now display in the admin area
