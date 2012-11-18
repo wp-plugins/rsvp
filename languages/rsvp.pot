@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  \n"
 "Report-Msgid-Bugs-To: http://wordpress.org/tag/rsvp\n"
-"POT-Creation-Date: 2012-11-18 18:58:06+00:00\n"
+"POT-Creation-Date: 2012-11-18 19:07:17+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -107,30 +107,30 @@ msgstr ""
 msgid "Please enter your first and last name to RSVP."
 msgstr ""
 
-#: wp-rsvp.php:238
+#: wp-rsvp.php:239
 msgid "Save Changes"
 msgstr ""
 
-#: wp-rsvp.php:313 wp-rsvp.php:936
+#: wp-rsvp.php:314 wp-rsvp.php:937
 msgid "Bulk Actions"
 msgstr ""
 
-#: wp-rsvp.php:314 wp-rsvp.php:937
+#: wp-rsvp.php:315 wp-rsvp.php:938
 msgid "Delete"
 msgstr ""
 
-#: wp-rsvp.php:316 wp-rsvp.php:939
+#: wp-rsvp.php:317 wp-rsvp.php:940
 msgid "Apply"
 msgstr ""
 
-#: wp-rsvp.php:317
+#: wp-rsvp.php:318
 msgid "Export Attendees"
 msgstr ""
 
-#: wp-rsvp.php:777 wp-rsvp.php:872 wp-rsvp.php:1135
+#: wp-rsvp.php:778 wp-rsvp.php:873 wp-rsvp.php:1136
 msgid "Save"
 msgstr ""
 
-#: wp-rsvp.php:940
+#: wp-rsvp.php:941
 msgid "Save Sort Order"
 msgstr ""
