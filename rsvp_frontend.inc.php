@@ -14,7 +14,7 @@ function rsvp_frontend_handler($text) {
 	$openDate = get_option(OPTION_OPENDATE);
 	$closeDate = get_option(OPTION_DEADLINE);
 	if((strtotime($openDate) !== false) && (strtotime($openDate) > time())) {
-		return rsvp_handle_output($text, __("<p>I am sorry but the ability to RSVP for our wedding won't open till <strong>%1$s</strong></p>", date("m/d/Y", strtotime($openDate))), 'rsvp-plugin');
+		return rsvp_handle_output($text, sprintf(__("<p>I am sorry but the ability to RSVP for our wedding won't open till <strong>%1$s</strong></p>", 'rsvp-plugin'), date("m/d/Y", strtotime($openDate))));
 	} 
 	
 	if((strtotime($closeDate) !== false) && (strtotime($closeDate) < time())) {
@@ -40,7 +40,7 @@ function rsvp_frontend_handler($text) {
 					return $output;
 				break;
 			case("find") :
-				$ouput = rsvp_find($output, $text);
+				$output = rsvp_find($output, $text);
 				if(!empty($output))
 					return $output;
 				break;
@@ -559,14 +559,15 @@ function rsvp_find(&$output, &$text) {
 							<input type=\"submit\" value=\"RSVP\" />\r\n
 							</p>\r\n</form>\r\n";
 				}
-						
 				return rsvp_handle_output($text, $output);
 			} else {
 				$i = strlen($truncFirstName);
 			}
 		}
 	}
-	return rsvp_handle_output($text, "<p><strong>".__("We were unable to find anyone with a name of", 'rsvp-plugin')." ".htmlentities($firstName." ".$lastName)."</strong></p>\r\n".rsvp_frontend_greeting());
+	$notFoundText = sprintf(__('<p><strong>We were unable to find anyone with a name of %1$s %2$s</strong></p>', 'rsvp-plugin'), htmlentities($firstName), htmlentities($lastName));
+	$notFoundText .= rsvp_frontend_greeting();
+	return rsvp_handle_output($text, $notFoundText);
 }
 
 function rsvp_handlersvp(&$output, &$text) {
