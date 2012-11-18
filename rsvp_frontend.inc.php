@@ -18,7 +18,7 @@ function rsvp_frontend_handler($text) {
 	} 
 	
 	if((strtotime($closeDate) !== false) && (strtotime($closeDate) < time())) {
-		return rsvp_handle_output($text, __("<p>The deadline to RSVP for this wedding has passed, please contact the bride and groom to see if there is still a seat for you.</p>", , 'rsvp-plugin'));
+		return rsvp_handle_output($text, __("<p>The deadline to RSVP for this wedding has passed, please contact the bride and groom to see if there is still a seat for you.</p>", 'rsvp-plugin'));
 	}
 	
 	if(isset($_POST['rsvpStep'])) {
