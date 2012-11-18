@@ -1292,6 +1292,8 @@ License: GPL
 		wp_register_script('jquery_validate', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.validate/1.5.5/jquery.validate.min.js");
 		wp_enqueue_script('jquery');
 		wp_enqueue_script('jquery_validate');
+		
+		load_plugin_textdomain('rsvp-plugin', false, basename( dirname( __FILE__ ) ) . '/languages' );
 	}
 	
 	function rsvp_printQueryDebugInfo() {
