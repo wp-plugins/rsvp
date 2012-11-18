@@ -6,11 +6,12 @@
  */
 /*
 Plugin Name: RSVP 
+Text Domain: rsvp-plugin
 Plugin URI: http://wordpress.org/#
 Description: This plugin allows guests to RSVP to an event.  It was made 
              initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.5.0
+Version: 1.6.0
 Author URI: http://mde-dev.com
 License: GPL
 */

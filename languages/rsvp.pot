@@ -1,0 +1,136 @@
+# Copyright (C) 2012 
+# This file is distributed under the same license as the  package.
+msgid ""
+msgstr ""
+"Project-Id-Version:  \n"
+"Report-Msgid-Bugs-To: http://wordpress.org/tag/rsvp\n"
+"POT-Creation-Date: 2012-11-18 18:58:06+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2012-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: rsvp_frontend.inc.php:21
+msgid ""
+"<p>The deadline to RSVP for this wedding has passed, please contact the "
+"bride and groom to see if there is still a seat for you.</p>"
+msgstr ""
+
+#: rsvp_frontend.inc.php:177
+msgid ""
+"Yes, of course I will be there! Who doesn't like family, friends, weddings, "
+"and a good time?"
+msgstr ""
+
+#: rsvp_frontend.inc.php:179
+msgid ""
+"Um, unfortunately, there is a Star Trek marathon on that day that I just "
+"cannot miss."
+msgstr ""
+
+#: rsvp_frontend.inc.php:181
+msgid ""
+"We have the option of getting cheese pizza for the kids (and only kids).  Do "
+"you want pizza instead of \"adult food?\""
+msgstr ""
+
+#: rsvp_frontend.inc.php:183
+msgid ""
+"We also have the option of getting individual vegetarian meals instead of "
+"the fish or meat.  Would you like a vegetarian dinner?"
+msgstr ""
+
+#: rsvp_frontend.inc.php:185
+msgid ""
+"If you have any <strong style=\"color:red;\">food allergies</strong>, please "
+"indicate what they are in the &quot;notes&quot; section below.  Or, if you "
+"just want to send us a note, please feel free.  If you have any questions, "
+"please send us an email."
+msgstr ""
+
+#: rsvp_frontend.inc.php:191
+msgid "So, how about it?"
+msgstr ""
+
+#: rsvp_frontend.inc.php:257
+msgid "The following people associated with you have already registered:"
+msgstr ""
+
+#: rsvp_frontend.inc.php:271
+msgid ""
+"The following people are associated with you.  At this time you can RSVP for "
+"them as well."
+msgstr ""
+
+#: rsvp_frontend.inc.php:321
+msgid ""
+"Did we slip up and forget to invite someone? If so, please add him or her "
+"here:"
+msgstr ""
+
+#: rsvp_frontend.inc.php:508
+msgid "A first and last name must be specified"
+msgstr ""
+
+#: rsvp_frontend.inc.php:534 rsvp_frontend.inc.php:701
+msgid ""
+"There are a few more questions we need to ask you if you could please fill "
+"them out below to finish up the RSVP process."
+msgstr ""
+
+#: rsvp_frontend.inc.php:552
+msgid ""
+"We could not find an exact match but could any of the below entries be you?"
+msgstr ""
+
+#: rsvp_frontend.inc.php:568
+msgid ""
+"<p><strong>We were unable to find anyone with a name of %1$s %2$s</strong></"
+"p>"
+msgstr ""
+
+#: rsvp_frontend.inc.php:679
+msgid "Welcome back"
+msgstr ""
+
+#: rsvp_frontend.inc.php:696
+msgid "Hi"
+msgstr ""
+
+#: rsvp_frontend.inc.php:724
+msgid "Thank you for RSVPing"
+msgstr ""
+
+#: rsvp_frontend.inc.php:738
+msgid "Please enter your first and last name to RSVP."
+msgstr ""
+
+#: wp-rsvp.php:238
+msgid "Save Changes"
+msgstr ""
+
+#: wp-rsvp.php:313 wp-rsvp.php:936
+msgid "Bulk Actions"
+msgstr ""
+
+#: wp-rsvp.php:314 wp-rsvp.php:937
+msgid "Delete"
+msgstr ""
+
+#: wp-rsvp.php:316 wp-rsvp.php:939
+msgid "Apply"
+msgstr ""
+
+#: wp-rsvp.php:317
+msgid "Export Attendees"
+msgstr ""
+
+#: wp-rsvp.php:777 wp-rsvp.php:872 wp-rsvp.php:1135
+msgid "Save"
+msgstr ""
+
+#: wp-rsvp.php:940
+msgid "Save Sort Order"
+msgstr ""

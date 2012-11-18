@@ -59,6 +59,9 @@ I will see if I can get it added for you.
 
 == Changelog ==
 
+= 1.6.0 =
+* Added in internationalization for the front-end piece of the RSVP plugin
+
 = 1.5.0 =
 * Made it so the plugin would only replace the plugin short code and not all of the page's content
 * Changed it so when the site is running over SSL the included javascript files would also be loaded over SSL
