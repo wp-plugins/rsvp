@@ -3,8 +3,8 @@ Contributors: mdedev
 Donate link: http://www.amazon.com/wishlist/2Q3LK1E1O3ZQ6
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 2.7
-Tested up to: 3.3.1
-Stable tag: 1.5.0
+Tested up to: 3.4.2
+Stable tag: 1.6.0
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -37,6 +37,17 @@ The admin functionality allows you to do the following things:
 If there are any improvements or modifications you would like to see in the plugin please feel free to contact me at (mike AT mde DASH dev.com) and 
 I will see if I can get them into the plugin for you.  
 
+Available CSS Stylings
+* rsvpPlugin - ID of the main RSVP Container. Each RSVP step will be wrapped in this container 
+* rsvpParagraph - Class name that is used for all paragraph tags on the front end portion of the RSVP
+* rsvpFormField - Class for divs that surround a given form input, which is a combination of a label and at least one form input (could be multiple form inputs)
+* rsvpAdditionalAttendee - Class for the div container that holds each additional RSVP attendee you are associated with
+* additionalRsvpContainer - The container that holds the plus sign that allows for people to add additional attendees
+* rsvpCustomGreeting - ID for the custom greeting div that shows up if that option is enabled
+* rsvpBorderTop - Class for setting a top border on certain divs in the main input form
+* rsvpCheckboxCustomQ - Class for the div that surrounds each custom question checkbox 
+* rsvpClear - A class for div elements that we want to use to set clear both. Currently used only next to rsvpCheckboxCustomQs as they are floated
+
 == Installation ==
 
 1. Update the `rsvp` folder to the `/wp-content/plugins/` directory
@@ -61,6 +72,9 @@ I will see if I can get it added for you.
 
 = 1.6.0 =
 * Added in internationalization for the front-end piece of the RSVP plugin
+* Changed the front-end layout from a table based structure to more divs with classes to be used for styling
+* Added in sytling
+* Moved some CSS and JavaScript to separate files instead of being included inline
 
 = 1.5.0 =
 * Made it so the plugin would only replace the plugin short code and not all of the page's content
