@@ -62,7 +62,27 @@ License: GPL
 	define("QT_LONG", "longAnswer");
 	define("QT_DROP", "dropdown");
 	define("QT_RADIO", "radio");
-	
+  define("RSVP_START_PARA", "<p class=\"rsvpParagraph\">");
+  define("RSVP_END_PARA", "</p>\r\n");
+  define("RSVP_START_CONTAINER", "<div id=\"rsvpPlugin\">\r\n");
+  define("RSVP_END_CONTAINER", "</div>\r\n");
+  define("RSVP_START_FORM_FIELD", "<div class=\"rsvpFormField\">\r\n");
+  define("RSVP_END_FORM_FIELD", "</div>\r\n");
+  
+  $my_plugin_file = __FILE__;
+
+  if (isset($plugin)) {
+    $my_plugin_file = $plugin;
+  }
+  else if (isset($mu_plugin)) {
+    $my_plugin_file = $mu_plugin;
+  }
+  else if (isset($network_plugin)) {
+    $my_plugin_file = $network_plugin;
+  }
+
+  define('RSVP_PLUGIN_FILE', $my_plugin_file);
+  define('RSVP_PLUGIN_PATH', WP_PLUGIN_DIR.'/'.basename(dirname($my_plugin_file)));
 	if((isset($_GET['page']) && (strToLower($_GET['page']) == 'rsvp-admin-export')) || 
 		 (isset($_POST['rsvp-bulk-action']) && (strToLower($_POST['rsvp-bulk-action']) == "export"))) {
 		add_action('init', 'rsvp_admin_export');
@@ -1291,8 +1311,13 @@ License: GPL
 	
 	function rsvp_init() {
 		wp_register_script('jquery_validate', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.validate/1.5.5/jquery.validate.min.js");
+    wp_register_script('rsvp_plugin', plugins_url("rsvp_plugin.js", RSVP_PLUGIN_FILE));
+    wp_register_style('rsvp_css', plugins_url("rsvp_plugin.css", RSVP_PLUGIN_FILE));
 		wp_enqueue_script('jquery');
 		wp_enqueue_script('jquery_validate');
+    wp_enqueue_script('rsvp_plugin');
+    wp_enqueue_style("rsvp_css");
+    
 		
 		load_plugin_textdomain('rsvp-plugin', false, basename( dirname( __FILE__ ) ) . '/languages' );
 	}

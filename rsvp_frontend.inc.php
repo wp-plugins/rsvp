@@ -14,11 +14,11 @@ function rsvp_frontend_handler($text) {
 	$openDate = get_option(OPTION_OPENDATE);
 	$closeDate = get_option(OPTION_DEADLINE);
 	if((strtotime($openDate) !== false) && (strtotime($openDate) > time())) {
-		return rsvp_handle_output($text, sprintf(__("<p>I am sorry but the ability to RSVP for our wedding won't open till <strong>%1$s</strong></p>", 'rsvp-plugin'), date("m/d/Y", strtotime($openDate))));
+		return rsvp_handle_output($text, sprintf(__(RSVP_START_PARA."I am sorry but the ability to RSVP for our wedding won't open till <strong>%1$s</strong>".RSVP_END_PARA, 'rsvp-plugin'), date("m/d/Y", strtotime($openDate))));
 	} 
 	
 	if((strtotime($closeDate) !== false) && (strtotime($closeDate) < time())) {
-		return rsvp_handle_output($text, __("<p>The deadline to RSVP for this wedding has passed, please contact the bride and groom to see if there is still a seat for you.</p>", 'rsvp-plugin'));
+		return rsvp_handle_output($text, __(RSVP_START_PARA."The deadline to RSVP for this wedding has passed, please contact the bride and groom to see if there is still a seat for you.".RSVP_END_PARA, 'rsvp-plugin'));
 	}
 	
 	if(isset($_POST['rsvpStep'])) {
@@ -110,14 +110,16 @@ function rsvp_handleAdditionalQuestions($attendeeID, $formName) {
 }
 
 function rsvp_frontend_prompt_to_edit($attendee) {
-	$prompt = "<p>Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))." it looks like you have already RSVP'd. 
-								Would you like to edit your reservation?</p>";
+  $prompt = RSVP_START_CONTAINER; 
+	$prompt .= RSVP_START_PARA."Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))." it looks like you have already RSVP'd. 
+								Would you like to edit your reservation?".RSVP_END_PARA;
 	$prompt .= "<form method=\"post\">\r\n
 								<input type=\"hidden\" name=\"attendeeID\" value=\"".$attendee->id."\" />
 								<input type=\"hidden\" name=\"rsvpStep\" id=\"rsvpStep\" value=\"editattendee\" />
 								<input type=\"submit\" value=\"Yes\" onclick=\"document.getElementById('rsvpStep').value='editattendee';\" />
 								<input type=\"submit\" value=\"No\" onclick=\"document.getElementById('rsvpStep').value='newsearch';\"  />
 							</form>\r\n";
+  $prompt .= RSVP_END_CONTAINER;
 	return $prompt;
 }
 
@@ -133,46 +135,9 @@ function rsvp_frontend_main_form($attendeeID) {
 	$newRsvps = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
 	
 	
-	$form = "<script type=\"text/javascript\" language=\"javascript\">\r\n
-							jQuery(document).ready(function(){
-								jQuery.validator.addMethod(\"customNote\", function(value, element) {
-						      if((jQuery(\"#additionalRsvp\").val() > 0) && (jQuery(\"#note\").val() == \"\")) {
-						        return false;
-						      }
-
-						      return true;
-						    }, \"<br />Please enter an email address that we can use to contact you about the extra guest.  We have to keep a pretty close eye on the number of attendees.  Thanks!\");
-						
-								jQuery(\"#rsvpForm\").validate({\r\n
-									rules: {
-										note: \"customNote\",
-										newAttending1LastName:  \"required\",
-										newAttending1FirstName: \"required\", 
-										newAttending2LastName:  \"required\",
-										newAttending2FirstName: \"required\",
-										newAttending3LastName:  \"required\",
-										newAttending3FirstName: \"required\"
-									},
-									messages: {
-										note: \"<br />If you are adding additional RSVPs please enter your email address in case we have questions\",
-										newAttending1LastName:  \"<br />Please enter a last name\",
-										newAttending1FirstName: \"<br />Please enter a first name\", 
-										newAttending2LastName:  \"<br />Please enter a last name\",
-										newAttending2FirstName: \"<br />Please enter a first name\",
-										newAttending3LastName:  \"<br />Please enter a last name\",
-										newAttending3FirstName: \"<br />Please enter a first name\"
-									}
-								});
-							});
-					</script>\r\n";
-	$form .= "<style text/css>\r\n".
-						"	label.error { font-weight: bold; clear:both;}\r\n".
-						"	input.error, textarea.error { border: 2px solid red; }\r\n".
-						"</style>\r\n";
-	$form .= "<form id=\"rsvpForm\" name=\"rsvpForm\" method=\"post\">\r\n";
+	$form = "<form id=\"rsvpForm\" name=\"rsvpForm\" method=\"post\">\r\n";
 	$form .= "	<input type=\"hidden\" name=\"attendeeID\" value=\"".$attendeeID."\" />\r\n";
 	$form .= "	<input type=\"hidden\" name=\"rsvpStep\" value=\"handleRsvp\" />\r\n";
-	$form .= "<table cellpadding=\"2\" cellspacing=\"0\" border=\"0\">\r\n";
 	$yesVerbiage = ((trim(get_option(OPTION_YES_VERBIAGE)) != "") ? get_option(OPTION_YES_VERBIAGE) : 
 		__("Yes, of course I will be there! Who doesn't like family, friends, weddings, and a good time?", 'rsvp-plugin'));
 	$noVerbiage = ((trim(get_option(OPTION_NO_VERBIAGE)) != "") ? get_option(OPTION_NO_VERBIAGE) : 
@@ -183,70 +148,51 @@ function rsvp_frontend_main_form($attendeeID) {
 					__("We also have the option of getting individual vegetarian meals instead of the fish or meat.  Would you like a vegetarian dinner?", 'rsvp-plugin'));
 	$noteVerbiage = ((trim(get_option(OPTION_NOTE_VERBIAGE)) != "") ? get_option(OPTION_NOTE_VERBIAGE) : 
 		__("If you have any <strong style=\"color:red;\">food allergies</strong>, please indicate what they are in the &quot;notes&quot; section below.  Or, if you just want to send us a note, please feel free.  If you have any questions, please send us an email.", 'rsvp-plugin'));
-	$form .= "  <tr>\r\n
-								<td align=\"left\">";
+	$form .= RSVP_START_PARA;
 								if(trim(get_option(OPTION_RSVP_QUESTION)) != "") {
 									$form .= trim(get_option(OPTION_RSVP_QUESTION));
 								} else {
 									$form .= __("So, how about it?", 'rsvp-plugin');
 								}
-	$form .= "</td>
-							</tr>\r\n
-							<tr>\r\n
-								<td colspan=\"2\" align=\"left\"><input type=\"radio\" name=\"mainRsvp\" value=\"Y\" id=\"mainRsvpY\" ".
-									(($attendee->rsvpStatus == "No") ? "" : "checked=\"checked\"")." /> - <label for=\"mainRsvpY\">".$yesVerbiage."</label></td>
-							</tr>\r\n
-							<tr>\r\n
-								<td align=\"left\" colspan=\"2\"><input type=\"radio\" name=\"mainRsvp\" value=\"N\" id=\"mainRsvpN\" ".
-											(($attendee->rsvpStatus == "No") ? "checked=\"checked\"" : "")." /> - 
-											<label for=\"mainRsvpN\">".$noVerbiage."</label></td>
-							</tr>
-							<tr><td><br /></td></tr>";		
+  
+	$form .= RSVP_END_PARA.
+    rsvp_BeginningFormField("", "").
+    "<input type=\"radio\" name=\"mainRsvp\" value=\"Y\" id=\"mainRsvpY\" ".
+									(($attendee->rsvpStatus == "No") ? "" : "checked=\"checked\"")." /> <label for=\"mainRsvpY\">".$yesVerbiage."</label>".
+    RSVP_END_FORM_FIELD.
+    rsvp_BeginningFormField("", "").
+      "<input type=\"radio\" name=\"mainRsvp\" value=\"N\" id=\"mainRsvpN\" ".(($attendee->rsvpStatus == "No") ? "checked=\"checked\"" : "")." /> 
+			 <label for=\"mainRsvpN\">".$noVerbiage."</label>".
+    RSVP_END_FORM_FIELD;
 	if(!empty($attendee->personalGreeting)) {
-		$form .= "<tr>\r\n
-						<td colspan=\"2\" align=\"left\">".nl2br(stripslashes($attendee->personalGreeting))."</td>\r\n
-					</tr>
-					<tr><td><br /></td></tr>\r\n";
+		$form .= rsvp_BeginningFormField("rsvpCustomGreeting", "").nl2br(stripslashes($attendee->personalGreeting)).RSVP_END_FORM_FIELD;
 	}
-
 	if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
-		$form .= "	<tr><td colspan=\"2\"><hr /></td></tr>\r\n
-								<tr>\r\n
-									<td colspan=\"2\" align=\"left\">".$kidsVerbiage."</td>
-								</tr>\r\n
-								<tr>\r\n
-									<td align=\"center\" colspan=\"2\"><input type=\"radio\" name=\"mainKidsMeal\" value=\"Y\" id=\"mainKidsMealY\" 
-									 	".(($attendee->kidsMeal == "Y") ? "checked=\"checked\"" : "")." /> <label for=\"mainKidsMealY\">Yes</label> 
-											<input type=\"radio\" name=\"mainKidsMeal\" value=\"N\" id=\"mainKidsMealN\" 
-											".(($attendee->kidsMeal == "Y") ? "" : "checked=\"checked\"")." /> <label for=\"mainKidsMealN\">No</label></td>
-								</tr>
-								<tr><td><br /></td></tr>";
+		$form .= rsvp_BeginningFormField("", "rsvpBorderTop").
+      RSVP_START_PARA.$kidsVerbiage.RSVP_END_PARA.
+      "<input type=\"radio\" name=\"mainKidsMeal\" value=\"Y\" id=\"mainKidsMealY\" 
+		 	".(($attendee->kidsMeal == "Y") ? "checked=\"checked\"" : "")." /> <label for=\"mainKidsMealY\">Yes</label> 
+				<input type=\"radio\" name=\"mainKidsMeal\" value=\"N\" id=\"mainKidsMealN\" 
+				".(($attendee->kidsMeal == "Y") ? "" : "checked=\"checked\"")." /> <label for=\"mainKidsMealN\">No</label>".
+      RSVP_END_FORM_FIELD;
 	}
 	
 	if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
-		$form .= "	<tr><td colspan=\"2\"><hr /></td></tr>\r\n
-								<tr>\r\n
-									<td align=\"left\" colspan=\"2\">".$veggieVerbiage."</td> 
-								</tr>\r\n
-								<tr>\r\n
-									<td align=\"center\" colspan=\"2\"><input type=\"radio\" name=\"mainVeggieMeal\" value=\"Y\" id=\"mainVeggieMealY\"
-									 		".(($attendee->veggieMeal == "Y") ? "checked=\"checked\"" : "")."/> <label for=\"mainVeggieMealY\">Yes</label> 
-											<input type=\"radio\" name=\"mainVeggieMeal\" value=\"N\" id=\"mainVeggieMealN\" 
-											".(($attendee->veggieMeal == "Y") ? "" : "checked=\"checked\"")." /> <label for=\"mainVeggieMealN\">No</label></td>
-								</tr>\r\n";
+		$form .= rsvp_BeginningFormField("", "rsvpBorderTop").
+      RSVP_START_PARA.$veggieVerbiage.RSVP_END_PARA.
+      "<input type=\"radio\" name=\"mainVeggieMeal\" value=\"Y\" id=\"mainVeggieMealY\"
+	 		".(($attendee->veggieMeal == "Y") ? "checked=\"checked\"" : "")."/> <label for=\"mainVeggieMealY\">Yes</label> 
+			<input type=\"radio\" name=\"mainVeggieMeal\" value=\"N\" id=\"mainVeggieMealN\" 
+			".(($attendee->veggieMeal == "Y") ? "" : "checked=\"checked\"")." /> <label for=\"mainVeggieMealN\">No</label>".
+      RSVP_END_FORM_FIELD;
 	}
 	
 	$form .= rsvp_buildAdditionalQuestions($attendeeID, "main");
 	
 	
-	$form .= " <tr><td><br /></td></tr>\r\n
-						 <tr>
-								<td valign=\"top\" align=\"left\" colspan=\"2\">".$noteVerbiage."</td>
-							</tr>
-							<tr>
-								<td colspan=\"2\"><textarea name=\"rsvp_note\" id=\"rsvp_note\" rows=\"7\" cols=\"50\">".$attendee->note."</textarea></td>
-						 </tr>";
-	$form .= "</table>\r\n";
+	$form .= RSVP_START_PARA.$noteVerbiage.RSVP_END_PARA.
+    rsvp_BeginningFormField("", "").
+      "<textarea name=\"rsvp_note\" id=\"rsvp_note\" rows=\"7\" cols=\"50\">".$attendee->note."</textarea>".RSVP_END_FORM_FIELD;
 	
 	$sql = "SELECT id, firstName, lastName FROM ".ATTENDEES_TABLE." 
 	 	WHERE (id IN (SELECT attendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE associatedAttendeeID = %d) 
@@ -254,11 +200,13 @@ function rsvp_frontend_main_form($attendeeID) {
 			 AND rsvpStatus <> 'NoResponse'";
 	$rsvpd = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
 	if(count($rsvpd) > 0) {
-		$form .= "<p>".__("The following people associated with you have already registered:", 'rsvp-plugin')." ";
+    $form .= "<div class=\"rsvpAdditionalAttendee\">\r\n";
+		$form .= RSVP_START_PARA.__("The following people associated with you have already registered:", 'rsvp-plugin')." ";
 		foreach($rsvpd as $r) {
 			$form .= "<br />".htmlentities($r->firstName." ".$r->lastName);
 		}
-		$form .= "</p>\r\n";
+		$form .= RSVP_END_PARA;
+    $form .= "</div>";
 	}
 	
 	$sql = "SELECT id, firstName, lastName, personalGreeting FROM ".ATTENDEES_TABLE." 
@@ -270,49 +218,38 @@ function rsvp_frontend_main_form($attendeeID) {
 	if(count($associations) > 0) {
 		$form .= "<h3>".__("The following people are associated with you.  At this time you can RSVP for them as well.", 'rsvp-plugin')."</h3>";
 		foreach($associations as $a) {
-			$form .= "<div style=\"text-align:left;border-top: 1px solid;\">\r\n
-							<p><label for=\"rsvpFor".$a->id."\">RSVP for ".htmlentities($a->firstName." ".$a->lastName)."?</label> 
-									<input type=\"checkbox\" name=\"rsvpFor".$a->id."\" id=\"rsvpFor".$a->id."\" value=\"Y\" /></p>";
+			$form .= "<div class=\"rsvpAdditionalAttendee\">\r\n".
+							RSVP_START_PARA."<label for=\"rsvpFor".$a->id."\">RSVP for ".htmlentities($a->firstName." ".$a->lastName)."?</label> 
+									<input type=\"checkbox\" name=\"rsvpFor".$a->id."\" id=\"rsvpFor".$a->id."\" value=\"Y\" />".RSVP_END_PARA;
 			
-			$form .= "<table cellpadding=\"2\" cellspacing=\"0\" border=\"0\">\r\n";
-			$form .= "  <tr>\r\n
-										<td align=\"left\">Will ".htmlentities($a->firstName)." be attending?</td>\r\n
-										<td align=\"left\"><input type=\"radio\" name=\"attending".$a->id."\" value=\"Y\" id=\"attending".$a->id."Y\" checked=\"checked\" /> 
-																			<label for=\"attending".$a->id."Y\">Yes</label> 
-												<input type=\"radio\" name=\"attending".$a->id."\" value=\"N\" id=\"attending".$a->id."N\" /> <label for=\"attending".$a->id."N\">No</label></td>
-									</tr>
-									<tr><td><br /></td></tr>";
+			$form .= rsvp_BeginningFormField("", "")." Will ".htmlentities($a->firstName)." be attending? 
+              <input type=\"radio\" name=\"attending".$a->id."\" value=\"Y\" id=\"attending".$a->id."Y\" checked=\"checked\" /> 
+							<label for=\"attending".$a->id."Y\">Yes</label> 
+							<input type=\"radio\" name=\"attending".$a->id."\" value=\"N\" id=\"attending".$a->id."N\" /> <label for=\"attending".$a->id."N\">No</label>".
+              RSVP_END_FORM_FIELD;
 			
 			if(!empty($a->personalGreeting)) {
-				$form .= "<tr>\r\n
-								<td colspan=\"2\" align=\"left\">".nl2br($a->personalGreeting)."</td>\r\n
-							</tr>
-							<tr><td><br /></td></tr>\r\n";
+				$form .= RSVP_START_PARA.nl2br($a->personalGreeting).RSVP_END_PARA;
 			}
 			
 			if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
-				$form .= "	<tr>
-											<td align=\"left\">Does ".htmlentities($a->firstName)." need a kids meal?&nbsp;</td> 
-											<td align=\"left\"><input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"Y\" id=\"attending".$a->id."KidsMealY\" /> 
-																				<label for=\"attending".$a->id."KidsMealY\">Yes</label> 
-													<input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"N\" id=\"attending".$a->id."KidsMealN\" checked=\"checked\" /> 
-													<label for=\"attending".$a->id."KidsMealN\">No</label></td>
-										</tr>
-										<tr><td><br /></td></tr>";
+				$form .= rsvp_BeginningFormField("", "").
+          "Does ".htmlentities($a->firstName)." need a kids meal?&nbsp; 
+          <input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"Y\" id=\"attending".$a->id."KidsMealY\" /> 
+					<label for=\"attending".$a->id."KidsMealY\">Yes</label> 
+					<input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"N\" id=\"attending".$a->id."KidsMealN\" checked=\"checked\" /> 
+					<label for=\"attending".$a->id."KidsMealN\">No</label>".RSVP_END_FORM_FIELD;
 			}
 			
 			if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
-				$form .= "	<tr>
-											<td align=\"left\">Does ".htmlentities($a->firstName)." need a vegetarian meal?&nbsp;</td> 
-											<td align=\"left\"><input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"Y\" id=\"attending".$a->id."VeggieMealY\" /> 
-																				<label for=\"attending".$a->id."VeggieMealY\">Yes</label> 
-													<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"N\" id=\"attending".$a->id."VeggieMealN\" checked=\"checked\" /> 
-													<label for=\"attending".$a->id."VeggieMealN\">No</label></td>
-										</tr>";
+				$form .= rsvp_BeginningFormField("", "")."Does ".htmlentities($a->firstName)." need a vegetarian meal?&nbsp; 
+    						<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"Y\" id=\"attending".$a->id."VeggieMealY\" /> 
+    						<label for=\"attending".$a->id."VeggieMealY\">Yes</label> 
+    						<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"N\" id=\"attending".$a->id."VeggieMealN\" checked=\"checked\" /> 
+    						<label for=\"attending".$a->id."VeggieMealN\">No</label>".RSVP_END_FORM_FIELD;
 			}
 			
 			$form .= rsvp_buildAdditionalQuestions($a->id, $a->id);
-			$form .= "</table>\r\n";
 			$form .= "</div>\r\n";
 		}
 	}
@@ -326,62 +263,54 @@ function rsvp_frontend_main_form($attendeeID) {
 							"</div>";
 	}
 						
-	$form .= "<p><input type=\"submit\" value=\"RSVP\" /></p>\r\n";
+	$form .= RSVP_START_PARA."<input type=\"submit\" value=\"RSVP\" />".RSVP_END_PARA;
 	if(get_option(OPTION_HIDE_ADD_ADDITIONAL) != "Y") {
-		$form .= "<script type=\"text/javascript\" language=\"javascript\">\r\n
-								jQuery(document).ready(function() {
-									jQuery(\"#addRsvp\").click(function() {
-										handleAddRsvpClick();
-									});
-								});
-							
+    // TODO: Need to move this into the main JS file but not sure how to do that with the options and the custom questions.
+    //       - Moving the options would be fairly easy. Just set two JS variables in here and then go off of that. 
+    //       - No clue on custom questions....
+		$form .= "<script type=\"text/javascript\" language=\"javascript\">\r\n							
 								function handleAddRsvpClick() {
 									var numAdditional = jQuery(\"#additionalRsvp\").val();
 									numAdditional++;
 									if(numAdditional > 3) {
 										alert('You have already added 3 additional rsvp\'s you can add no more.');
 									} else {
-										jQuery(\"#additionalRsvpContainer\").append(\"<div style=\\\"text-align:left;border-top: 1px solid;\\\">\" + \r\n
-												\"<table cellpadding=\\\"2\\\" cellspacing=\\\"0\\\" border=\\\"0\\\">\" + \r\n
-													\"<tr>\" + \r\n
-													\"	<td align=\\\"left\\\">Person's first name&nbsp;</td>\" + \r\n 
-													\"  <td align=\\\"left\\\"><input type=\\\"text\\\" name=\\\"newAttending\" + numAdditional + \"FirstName\\\" id=\\\"newAttending\" + numAdditional + \"FirstName\\\" /></td>\" + \r\n
-										  		\"</tr>\" + \r\n
-													\"<tr>\" + \r\n
-													\"	<td align=\\\"left\\\">Person's last name</td>\" + \r\n 
-													\"  <td align=\\\"left\\\"><input type=\\\"text\\\" name=\\\"newAttending\" + numAdditional + \"LastName\\\" id=\\\"newAttending\" + numAdditional + \"LastName\\\" /></td>\" + \r\n
-													\"</tr>\" + \r\n
-										  		\"<tr>\" + \r\n
-														\"<td align=\\\"left\\\">Will this person be attending?&nbsp;</td>\" + \r\n
-														\"<td align=\\\"left\\\">\" + 
-															\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"Y\\\" checked=\\\"checked\\\" /> \" + 
-																							\"<label for=\\\"newAttending\" + numAdditional + \"Y\\\">Yes</label> \" + 
-																\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"N\\\"> <label for=\\\"newAttending\" + numAdditional + \"N\\\">No</label></td>\" + 
-													\"</tr>\" + \r\n";
+										jQuery(\"#additionalRsvpContainer\").append(\"<div class=\\\"rsvpAdditionalAttendee\\\">\" + \r\n
+												\"<div class=\\\"rsvpFormField\\\">\" + \r\n
+													\"	<label for=\\\"newAttending\" + numAdditional + \"FirstName\\\">Person's first name&nbsp;</label>\" + \r\n 
+													\"  <input type=\\\"text\\\" name=\\\"newAttending\" + numAdditional + \"FirstName\\\" id=\\\"newAttending\" + numAdditional + \"FirstName\\\" />\" + \r\n
+										  	\"</div>\" + \r\n
+												\"<div class=\\\"rsvpFormField\\\">\" + \r\n
+													\"	<label for=\\\"newAttending\" + numAdditional + \"LastName\\\">Person's last name</label>\" + \r\n 
+													\"  <input type=\\\"text\\\" name=\\\"newAttending\" + numAdditional + \"LastName\\\" id=\\\"newAttending\" + numAdditional + \"LastName\\\" />\" + \r\n
+                        \"</div>\" + \r\n
+										  	\"<div class=\\\"rsvpFormField\\\">\" + \r\n
+														\"Will this person be attending?&nbsp;\" + \r\n
+														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"Y\\\" checked=\\\"checked\\\" /> \" + 
+														\"<label for=\\\"newAttending\" + numAdditional + \"Y\\\">Yes</label> \" + 
+														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"N\\\"> <label for=\\\"newAttending\" + numAdditional + \"N\\\">No</label>\" + 
+													\"</div>\" + \r\n";
 												if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
-													$form .= "\"<tr>\" + 
-														\"<td align=\\\"left\\\">Does this person need a kids meal?&nbsp;</td> \" + 
-														\"<td align=\\\"left\\\"><input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealY\\\" /> \" + 
-																	\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealY\\\">Yes</label> \" + 
-																\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealN\\\" checked=\\\"checked\\\" /> \" + 
-																\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealN\\\">No</label></td>\" + 
-													\"</tr>\" + \r\n";
+													$form .= "\"<div class=\\\"rsvpFormField\\\">\" + 
+														\"Does this person need a kids meal?&nbsp; \" + 
+														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealY\\\" /> \" + 
+														\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealY\\\">Yes</label> \" + 
+														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealN\\\" checked=\\\"checked\\\" /> \" + 
+														\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealN\\\">No</label>\" + 
+													\"</div>\" + \r\n";
 												}
 												if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
-													$form .= "\"<tr>\" + \r\n
-														\"<td align=\\\"left\\\">Does this person need a vegetarian meal?&nbsp;</td> \" + 
-														\"<td align=\\\"left\\\"><input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\" /> \" + 
-																							\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\">Yes</label> \" + 
-																\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\" checked=\\\"checked\\\" /> \" + 
-																\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\">No</label></td>\" + 
-													\"</tr>\" + ";
+													$form .= "\"<div class=\\\"rsvpFormField\\\">\" + \r\n
+														\"Does this person need a vegetarian meal?&nbsp; \" + 
+														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\" /> \" + 
+														\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\">Yes</label> \" + 
+														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\" checked=\\\"checked\\\" /> \" + 
+														\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\">No</label>\" + 
+													\"</div>\" + ";
 												}
 												$tmpVar = str_replace("\r\n", "", str_replace("|", "\"", addSlashes(rsvp_buildAdditionalQuestions(0, "| + numAdditional + |"))));
 												
-												$form .= "\"".$tmpVar."\" + ";
-											
-												$form .= "\"</table>\" + 
-												\"<br />\" + 
+												$form .= "\"".$tmpVar."\" + 
 											\"</div>\");
 										jQuery(\"#additionalRsvp\").val(numAdditional);
 									}
@@ -420,30 +349,22 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 		foreach($questions as $q) {
 			$oldAnswer = rsvp_revtrievePreviousAnswer($attendeeID, $q->id);
 			
-			$output .= "<tr>\r\n".
-				"<td align=\"left\">".stripslashes($q->question)."</td>\r\n".
-				"<td align=\"left\">";
+			$output .= rsvp_BeginningFormField("", "").RSVP_START_PARA.stripslashes($q->question).RSVP_END_PARA;
 				
 				if($q->questionType == QT_MULTI) {
 					$oldAnswers = explode(",", $oldAnswer);
 					
-					$output .= "</td></tr><tr><td colspan=\"2\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\r\n";
 					$answers = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $q->id));
 					if(count($answers) > 0) {
 						$i = 0;
-						$output .= "<tr>\r\n";
 						foreach($answers as $a) {
-							if($i % 3 == 0) {
-								$output .= "</tr><tr>";
-							}
-							$output .= "<td><input type=\"checkbox\" name=\"".$prefix."question".$q->id."[]\" id=\"".$prefix."question".$q->id.$a->id."\" value=\"".$a->id."\" "
+							$output .= rsvp_BeginningFormField("", "rsvpCheckboxCustomQ")."<input type=\"checkbox\" name=\"".$prefix."question".$q->id."[]\" id=\"".$prefix."question".$q->id.$a->id."\" value=\"".$a->id."\" "
 							  .((in_array(stripslashes($a->answer), $oldAnswers)) ? " checked=\"checked\"" : "")." />".
-								"<label for=\"".$prefix."question".$q->id.$a->id."\">".stripslashes($a->answer)."</label></td>\r\n";
+                "<label for=\"".$prefix."question".$q->id.$a->id."\">".stripslashes($a->answer)."</label>\r\n".RSVP_END_FORM_FIELD;
 							$i++;
 						}
-						$output .= "</tr>\r\n";
+            $output .= "<div class=\"rsvpClear\">&nbsp;</div>\r\n";
 					}
-					$output .= "</table>\r\n";
 				} else if ($q->questionType == QT_DROP) {
 					$oldAnswers = explode(",", $oldAnswer);
 					
@@ -457,33 +378,27 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 					}
 					$output .= "</select>\r\n";
 				} else if ($q->questionType == QT_LONG) {
-					$output .= "</td></tr><tr><td colspan=\"2\"><textarea name=\"".$prefix."question".$q->id."\" rows=\"5\" cols=\"35\">".htmlentities($oldAnswer)."</textarea>";
+					$output .= "<textarea name=\"".$prefix."question".$q->id."\" rows=\"5\" cols=\"35\">".htmlentities($oldAnswer)."</textarea>";
 				} else if ($q->questionType == QT_RADIO) {
 					$oldAnswers = explode(",", $oldAnswer);
-					$output .= "</td></tr><tr><td colspan=\"2\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\r\n";
 					$answers = $wpdb->get_results($wpdb->prepare("SELECT id, answer FROM ".QUESTION_ANSWERS_TABLE." WHERE questionID = %d", $q->id));
 					if(count($answers) > 0) {
 						$i = 0;
-						$output .= "<tr>\r\n";
+						$output .= RSVP_START_PARA;
 						foreach($answers as $a) {
-							if($i % 3 == 0) {
-								$output .= "</tr><tr>";
-							}
-							$output .= "<td><input type=\"radio\" name=\"".$prefix."question".$q->id."\" id=\"".$prefix."question".$q->id.$a->id."\" value=\"".$a->id."\" "
+							$output .= "<input type=\"radio\" name=\"".$prefix."question".$q->id."\" id=\"".$prefix."question".$q->id.$a->id."\" value=\"".$a->id."\" "
 							  .((in_array(stripslashes($a->answer), $oldAnswers)) ? " checked=\"checked\"" : "")." /> ".
-								"<label for=\"".$prefix."question".$q->id.$a->id."\">".stripslashes($a->answer)."</label></td>\r\n";
+              "<label for=\"".$prefix."question".$q->id.$a->id."\">".stripslashes($a->answer)."</label>\r\n";
 							$i++;
 						}
-						$output .= "</tr>\r\n";
+						$output .= RSVP_END_PARA;
 					}
-					$output .= "</table>\r\n";
 				} else {
 					// normal text input
 					$output .= "<input type=\"text\" name=\"".$prefix."question".$q->id."\" value=\"".htmlentities($oldAnswer)."\" size=\"25\" />";
 				}
 				
-			$output .= "</td>\r\n".
-							   "</tr>\r\n";
+			$output .= RSVP_END_FORM_FIELD;
 		}
 	}
 	
@@ -505,7 +420,7 @@ function rsvp_find(&$output, &$text) {
 	$lastName = $_POST['lastName'];
 				
 	if((strlen($_POST['firstName']) <= 1) || (strlen($_POST['lastName']) <= 1)) {
-		$output = "<p style=\"color:red\">".__("A first and last name must be specified", 'rsvp-plugin')."</p>\r\n";
+		$output = "<p class=\"rsvpParagraph\" style=\"color:red\">".__("A first and last name must be specified", 'rsvp-plugin')."</p>\r\n";
 		$output .= rsvp_frontend_greeting();
 					
 		return rsvp_handle_output($text, $output);
@@ -526,12 +441,12 @@ function rsvp_find(&$output, &$text) {
 		// hey we found something, we should move on and print out any associated users and let them rsvp
 		$output = "<div>\r\n";
 		if(strtolower($attendee->rsvpStatus) == "noresponse") {
-			$output .= "<p>Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))."!</p>";
+			$output .= RSVP_START_PARA."Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))."!".RSVP_END_PARA;
 						
 			if(trim(get_option(OPTION_WELCOME_TEXT)) != "") {
-				$output .= "<p>".trim(get_option(OPTION_WELCOME_TEXT))."</p>";
+				$output .= RSVP_START_PARA.trim(get_option(OPTION_WELCOME_TEXT)).RSVP_END_PARA;
 			} else {
-				$output .= "<p>".__("There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.", 'rsvp-plugin')."</p>";
+				$output .= RSVP_START_PARA.__("There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.", 'rsvp-plugin').RSVP_END_PARA;
 			}
 						
 			$output .= rsvp_frontend_main_form($attendee->id);
@@ -549,12 +464,12 @@ function rsvp_find(&$output, &$text) {
 			$attendees = $wpdb->get_results("SELECT id, firstName, lastName, rsvpStatus FROM ".ATTENDEES_TABLE." 
 																			 WHERE lastName = '".mysql_real_escape_string($lastName)."' AND firstName LIKE '".mysql_real_escape_string($truncFirstName)."%'");
 			if(count($attendees) > 0) {
-				$output = "<p><strong>".__("We could not find an exact match but could any of the below entries be you?", 'rsvp-plugin')."</strong></p>";
+				$output = RSVP_START_PARA."<strong>".__("We could not find an exact match but could any of the below entries be you?", 'rsvp-plugin')."</strong>".RSVP_END_PARA;
 				foreach($attendees as $a) {
 					$output .= "<form method=\"post\">\r\n
 									<input type=\"hidden\" name=\"rsvpStep\" value=\"foundattendee\" />\r\n
 									<input type=\"hidden\" name=\"attendeeID\" value=\"".$a->id."\" />\r\n
-									<p style=\"text-align:left;\">\r\n
+									<p class=\"rsvpParagraph\" style=\"text-align:left;\">\r\n
 							".htmlentities($a->firstName." ".$a->lastName)." 
 							<input type=\"submit\" value=\"RSVP\" />\r\n
 							</p>\r\n</form>\r\n";
@@ -565,7 +480,7 @@ function rsvp_find(&$output, &$text) {
 			}
 		}
 	}
-	$notFoundText = sprintf(__('<p><strong>We were unable to find anyone with a name of %1$s %2$s</strong></p>', 'rsvp-plugin'), htmlentities($firstName), htmlentities($lastName));
+	$notFoundText = sprintf(__(RSVP_START_PARA.'<strong>We were unable to find anyone with a name of %1$s %2$s</strong>'.RSVP_END_PARA, 'rsvp-plugin'), htmlentities($firstName), htmlentities($lastName));
 	$notFoundText .= rsvp_frontend_greeting();
 	return rsvp_handle_output($text, $notFoundText);
 }
@@ -675,10 +590,10 @@ function rsvp_editAttendee(&$output, &$text) {
 													FROM ".ATTENDEES_TABLE." 
 													WHERE id = %d", $_POST['attendeeID']));
 		if($attendee != null) {
-			$output .= "<div>\r\n";
-			$output .= "<p>".__("Welcome back", 'rsvp-plugin')." ".htmlentities($attendee->firstName." ".$attendee->lastName)."!</p>";
+			$output .= RSVP_START_CONTAINER;
+			$output .= RSVP_START_PARA.__("Welcome back", 'rsvp-plugin')." ".htmlentities($attendee->firstName." ".$attendee->lastName)."!".RSVP_END_PARA;
 			$output .= rsvp_frontend_main_form($attendee->id);
-			return rsvp_handle_output($text, $output."</div>\r\n");
+			return rsvp_handle_output($text, $output.RSVP_END_CONTAINER);
 		}
 	}
 }
@@ -691,21 +606,21 @@ function rsvp_foundAttendee(&$output, &$text) {
 																							 FROM ".ATTENDEES_TABLE." 
 																							 WHERE id = %d", $_POST['attendeeID']));
 		if($attendee != null) {
-			$output = "<div>\r\n";
+			$output = RSVP_START_CONTAINER;
 			if(strtolower($attendee->rsvpStatus) == "noresponse") {
-				$output .= "<p>".__("Hi", 'rsvp-plugin')." ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))."!</p>";
+				$output .= RSVP_START_PARA.__("Hi", 'rsvp-plugin')." ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))."!".RSVP_END_PARA;
 							
 				if(trim(get_option(OPTION_WELCOME_TEXT)) != "") {
-					$output .= "<p>".trim(get_option(OPTION_WELCOME_TEXT))."</p>";
+					$output .= RSVP_START_PARA.trim(get_option(OPTION_WELCOME_TEXT)).RSVP_END_PARA;
 				} else {
-					$output .= "<p>".__("There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.", 'rsvp-plugin')."</p>";
+					$output .= RSVP_START_PARA.__("There are a few more questions we need to ask you if you could please fill them out below to finish up the RSVP process.", 'rsvp-plugin').RSVP_END_PARA;
 				}
 												
 				$output .= rsvp_frontend_main_form($attendee->id);
 			} else {
 				$output .= rsvp_frontend_prompt_to_edit($attendee);
 			}
-			return rsvp_handle_output($text, $output."</div>\r\n");
+			return rsvp_handle_output($text, $output.RSVP_END_CONTAINER);
 		} 
 					
 		return rsvp_handle_output($text, rsvp_frontend_greeting());
@@ -721,7 +636,7 @@ function frontend_rsvp_thankyou() {
 	if(!empty($customTy)) {
 		return nl2br($customTy);
 	} else {
-		return "<p>".__("Thank you for RSVPing", 'rsvp-plugin')."</p>";
+		return RSVP_START_CONTAINER.RSVP_START_PARA.__("Thank you for RSVPing", 'rsvp-plugin').RSVP_END_PARA.RSVP_END_CONTAINER;
 	}
 }
 
@@ -733,9 +648,13 @@ function rsvp_chomp_name($name, $maxLength) {
 	}
 }
 
+function rsvp_BeginningFormField($id, $additionalClasses) {
+  return "<div ".(!empty($id) ? "id=\"$id\"" : "")." class=\"rsvpFormField ".(!empty($additionalClasses) ? $additionalClasses : "")."\">";
+}
+
 function rsvp_frontend_greeting() {
 	$customGreeting = get_option(OPTION_GREETING);
-	$output = "<p>".__("Please enter your first and last name to RSVP.", 'rsvp-plugin')."</p>";
+	$output = RSVP_START_PARA.__("Please enter your first and last name to RSVP.", 'rsvp-plugin').RSVP_END_PARA;
 	$firstName = "";
 	$lastName = "";
 	$passcode = "";
@@ -749,26 +668,22 @@ function rsvp_frontend_greeting() {
 		$passcode = $_SESSION['rsvpPasscode'];
 	}
 	if(!empty($customGreeting)) {
-		$output = nl2br($customGreeting);
+		$output = RSVP_START_PARA.nl2br($customGreeting).RSVP_END_PARA;
 	} 
-	$output .= "<script type=\"text/javascript\">jQuery(document).ready(function(){ jQuery(\"#rsvp\").validate({rules: {firstName: \"required\",lastName: \"required\"}, messages: {firstName: \"<br />Please enter your first name\", lastName: \"<br />Please enter your last name\"}});});</script>";
-	$output .= "<style text/css>\r\n".
-		"	label.error { font-weight: bold; clear:both;}\r\n".
-		"	input.error { border: 2px solid red; }\r\n".
-		"</style>\r\n";
+  $output .= RSVP_START_CONTAINER;
 	$output .= "<form name=\"rsvp\" method=\"post\" id=\"rsvp\">\r\n";
 	$output .= "	<input type=\"hidden\" name=\"rsvpStep\" value=\"find\" />";
-	$output .= "<p><label for=\"firstName\">First Name:</label> 
-								 <input type=\"text\" name=\"firstName\" id=\"firstName\" size=\"30\" value=\"".htmlentities($firstName)."\" class=\"required\" /></p>\r\n";
-	$output .= "<p><label for=\"lastName\">Last Name:</label> 
-								 <input type=\"text\" name=\"lastName\" id=\"lastName\" size=\"30\" value=\"".htmlentities($lastName)."\" class=\"required\" /></p>\r\n";
+	$output .= RSVP_START_PARA."<label for=\"firstName\">First Name:</label> 
+								 <input type=\"text\" name=\"firstName\" id=\"firstName\" size=\"30\" value=\"".htmlentities($firstName)."\" class=\"required\" />".RSVP_END_PARA;
+	$output .= RSVP_START_PARA."<label for=\"lastName\">Last Name:</label> 
+								 <input type=\"text\" name=\"lastName\" id=\"lastName\" size=\"30\" value=\"".htmlentities($lastName)."\" class=\"required\" />".RSVP_END_PARA;
 	if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
-		$output .= "<p><label for=\"passcode\">Passcode:</label> 
-									 <input type=\"text\" name=\"passcode\" id=\"passcode\" size=\"30\" value=\"".htmlentities($passcode)."\" class=\"required\" /></p>\r\n";
+		$output .= RSVP_START_PARA."<label for=\"passcode\">Passcode:</label> 
+									 <input type=\"text\" name=\"passcode\" id=\"passcode\" size=\"30\" value=\"".htmlentities($passcode)."\" class=\"required\" />".RSVP_END_PARA;
 	}
-	$output .= "<p><input type=\"submit\" value=\"Register\" /></p>";
+	$output .= RSVP_START_PARA."<input type=\"submit\" value=\"".__("Complete your RSVP!", 'rsvp-plugin')."\" />".RSVP_END_PARA;
 	$output .= "</form>\r\n";
-	
+	$output .= RSVP_END_CONTAINER;
 	return $output;
 }
 ?>
