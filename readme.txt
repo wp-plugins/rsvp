@@ -37,7 +37,8 @@ The admin functionality allows you to do the following things:
 If there are any improvements or modifications you would like to see in the plugin please feel free to contact me at (mike AT mde DASH dev.com) and 
 I will see if I can get them into the plugin for you.  
 
-Available CSS Stylings
+Available CSS Stylings: 
+
 * rsvpPlugin - ID of the main RSVP Container. Each RSVP step will be wrapped in this container 
 * rsvpParagraph - Class name that is used for all paragraph tags on the front end portion of the RSVP
 * rsvpFormField - Class for divs that surround a given form input, which is a combination of a label and at least one form input (could be multiple form inputs)
