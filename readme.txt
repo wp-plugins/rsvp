@@ -2,9 +2,9 @@
 Contributors: mdedev
 Donate link: http://www.amazon.com/wishlist/2Q3LK1E1O3ZQ6
 Tags: rsvp, reserve, wedding, guestlist
-Requires at least: 2.7
-Tested up to: 3.4.2
-Stable tag: 1.6.0
+Requires at least: 3.0
+Tested up to: 3.5.0
+Stable tag: 1.6.1
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -69,6 +69,9 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.6.1 = 
+* Fixed a bug with the jQuery validate library that was causing an error with the 3.5.0 media manager. Thanks to Topher Simon for reporting the issue. 
 
 = 1.6.0 =
 * Added in internationalization for the front-end piece of the RSVP plugin

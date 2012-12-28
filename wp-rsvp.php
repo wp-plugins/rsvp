@@ -2,16 +2,15 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.6.0
+ * @version 1.6.1
  */
 /*
 Plugin Name: RSVP 
 Text Domain: rsvp-plugin
-Plugin URI: http://wordpress.org/#
-Description: This plugin allows guests to RSVP to an event.  It was made 
-             initially for weddings but could be used for other things.  
+Plugin URI: http://wordpress.org/extend/plugins/rsvp/
+Description: This plugin allows guests to RSVP to an event.  It was made initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.6.0
+Version: 1.6.1
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -1310,7 +1309,7 @@ License: GPL
 	}
 	
 	function rsvp_init() {
-		wp_register_script('jquery_validate', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.validate/1.5.5/jquery.validate.min.js");
+		wp_register_script('jquery_validate', rsvp_getHttpProtocol()."://ajax.aspnetcdn.com/ajax/jquery.validate/1.10.0/jquery.validate.min.js");
     wp_register_script('rsvp_plugin', plugins_url("rsvp_plugin.js", RSVP_PLUGIN_FILE));
     wp_register_style('rsvp_css', plugins_url("rsvp_plugin.css", RSVP_PLUGIN_FILE));
 		wp_enqueue_script('jquery');
