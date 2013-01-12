@@ -113,7 +113,7 @@ function rsvp_frontend_prompt_to_edit($attendee) {
   $prompt = RSVP_START_CONTAINER; 
 	$prompt .= RSVP_START_PARA."Hi ".htmlentities(stripslashes($attendee->firstName." ".$attendee->lastName))." it looks like you have already RSVP'd. 
 								Would you like to edit your reservation?".RSVP_END_PARA;
-	$prompt .= "<form method=\"post\">\r\n
+	$prompt .= "<form method=\"post\" action=\"".get_permalink()."\">\r\n
 								<input type=\"hidden\" name=\"attendeeID\" value=\"".$attendee->id."\" />
 								<input type=\"hidden\" name=\"rsvpStep\" id=\"rsvpStep\" value=\"editattendee\" />
 								<input type=\"submit\" value=\"Yes\" onclick=\"document.getElementById('rsvpStep').value='editattendee';\" />
@@ -135,7 +135,7 @@ function rsvp_frontend_main_form($attendeeID) {
 	$newRsvps = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
 	
 	
-	$form = "<form id=\"rsvpForm\" name=\"rsvpForm\" method=\"post\">\r\n";
+	$form = "<form id=\"rsvpForm\" name=\"rsvpForm\" method=\"post\" action=\"".get_permalink()."\">\r\n";
 	$form .= "	<input type=\"hidden\" name=\"attendeeID\" value=\"".$attendeeID."\" />\r\n";
 	$form .= "	<input type=\"hidden\" name=\"rsvpStep\" value=\"handleRsvp\" />\r\n";
 	$yesVerbiage = ((trim(get_option(OPTION_YES_VERBIAGE)) != "") ? get_option(OPTION_YES_VERBIAGE) : 
@@ -407,6 +407,7 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 
 function rsvp_find(&$output, &$text) {
 	global $wpdb;
+  $passcodeOptionEnabled = (get_option(OPTION_RSVP_PASSCODE) == "Y") ? true : false;
 	
 	$_SESSION['rsvpFirstName'] = $_POST['firstName'];
 	$_SESSION['rsvpLastName'] = $_POST['lastName'];
@@ -436,7 +437,7 @@ function rsvp_find(&$output, &$text) {
 																							 FROM ".ATTENDEES_TABLE." 
 																							 WHERE firstName = %s AND lastName = %s", $firstName, $lastName));
 	}
-				
+  
 	if($attendee != null) {
 		// hey we found something, we should move on and print out any associated users and let them rsvp
 		$output = "<div>\r\n";
@@ -466,7 +467,7 @@ function rsvp_find(&$output, &$text) {
 			if(count($attendees) > 0) {
 				$output = RSVP_START_PARA."<strong>".__("We could not find an exact match but could any of the below entries be you?", 'rsvp-plugin')."</strong>".RSVP_END_PARA;
 				foreach($attendees as $a) {
-					$output .= "<form method=\"post\">\r\n
+					$output .= "<form method=\"post\" action=\"".get_permalink()."\">\r\n
 									<input type=\"hidden\" name=\"rsvpStep\" value=\"foundattendee\" />\r\n
 									<input type=\"hidden\" name=\"attendeeID\" value=\"".$a->id."\" />\r\n
 									<p class=\"rsvpParagraph\" style=\"text-align:left;\">\r\n
@@ -671,7 +672,7 @@ function rsvp_frontend_greeting() {
 		$output = RSVP_START_PARA.nl2br($customGreeting).RSVP_END_PARA;
 	} 
   $output .= RSVP_START_CONTAINER;
-	$output .= "<form name=\"rsvp\" method=\"post\" id=\"rsvp\">\r\n";
+	$output .= "<form name=\"rsvp\" method=\"post\" id=\"rsvp\" action=\"".get_permalink()."\">\r\n";
 	$output .= "	<input type=\"hidden\" name=\"rsvpStep\" value=\"find\" />";
 	$output .= RSVP_START_PARA."<label for=\"firstName\">First Name:</label> 
 								 <input type=\"text\" name=\"firstName\" id=\"firstName\" size=\"30\" value=\"".htmlentities($firstName)."\" class=\"required\" />".RSVP_END_PARA;
