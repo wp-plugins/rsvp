@@ -1,10 +1,10 @@
 === RSVP Plugin ===
 Contributors: mdedev
-Donate link: http://www.amazon.com/wishlist/2Q3LK1E1O3ZQ6
+Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=mikede%40mde%2ddev%2ecom&lc=US&item_name=Wordpress%20RSVP%20Plugin&no_note=0&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHostedGuest
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 3.0
 Tested up to: 3.5.0
-Stable tag: 1.6.2
+Stable tag: 1.6.5
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
