@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.6.2
+ * @version 1.6.5
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Text Domain: rsvp-plugin
 Plugin URI: http://wordpress.org/extend/plugins/rsvp/
 Description: This plugin allows guests to RSVP to an event.  It was made initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.6.2
+Version: 1.6.5
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -45,6 +45,7 @@ License: GPL
 	define("OPTION_KIDS_MEAL_VERBIAGE", "rsvp_kids_meal_verbiage");
 	define("OPTION_VEGGIE_MEAL_VERBIAGE", "rsvp_veggie_meal_verbiage");
 	define("OPTION_NOTE_VERBIAGE", "rsvp_note_verbiage");
+  define("RSVP_OPTION_HIDE_NOTE", "rsvp_hide_note_field");
 	define("OPTION_HIDE_VEGGIE", "rsvp_hide_veggie");
 	define("OPTION_HIDE_KIDS_MEAL", "rsvp_hide_kids_meal");
 	define("OPTION_HIDE_ADD_ADDITIONAL", "rsvp_hide_add_additional");
@@ -224,6 +225,11 @@ License: GPL
 						<td align="left"><textarea name="rsvp_note_verbiage" id="rsvp_note_verbiage" rows="3" cols="60"><?php 
 							echo htmlspecialchars(get_option(OPTION_NOTE_VERBIAGE)); ?></textarea></td>
 					</tr>
+          <tr valign="top">
+            <th scope="row"><label for="rsvp_hide_note_field">Hide Note Field:</label></th>
+            <td align="left"><input type="checkbox" name="rsvp_hide_note_field" id="rsvp_hide_note_field" value="Y" 
+              <?php echo ((get_option(RSVP_OPTION_HIDE_NOTE) == "Y") ? " checked=\"checked\"" : ""); ?> /></td>
+          </tr>
 					<tr valign="top">
 						<th scope="row"><label for="rsvp_custom_thankyou">Custom Thank You:</label></th>
 						<td align="left"><textarea name="rsvp_custom_thankyou" id="rsvp_custom_thankyou" rows="5" cols="60"><?php echo htmlspecialchars(get_option(OPTION_THANKYOU)); ?></textarea></td>
@@ -518,7 +524,7 @@ License: GPL
 	
 	function rsvp_admin_export() {
 		global $wpdb;
-			$sql = "SELECT id, firstName, lastName, rsvpStatus, note, kidsMeal, additionalAttendee, veggieMeal 
+			$sql = "SELECT id, firstName, lastName, rsvpStatus, note, kidsMeal, additionalAttendee, veggieMeal, passcode 
 							FROM ".ATTENDEES_TABLE;
 							
 							$orderBy = " lastName, firstName";
@@ -548,6 +554,9 @@ License: GPL
 			if(get_option(OPTION_HIDE_VEGGIE) != "Y") {
 				$csv .= "\"Vegatarian\",";
 			}
+      if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+        $csv .= "\"Passcode\",";
+      }
 			$csv .= "\"Note\",\"Associated Attendees\"";
 			
 			$qRs = $wpdb->get_results("SELECT id, question FROM ".QUESTIONS_TABLE." ORDER BY sortOrder, id");
@@ -570,6 +579,10 @@ License: GPL
 				if(get_option(OPTION_HIDE_VEGGIE) != "Y") {
 					$csv .= "\"".(($a->veggieMeal == "Y") ? "Yes" : "No")."\",";
 				}
+        
+        if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+          $csv .= "\"".(($a->passcode))."\",";
+        }
 				
 				$csv .= "\"".(str_replace("\"", "\"\"", stripslashes($a->note)))."\",\"";
 			
@@ -621,6 +634,7 @@ License: GPL
 					$fName = trim($data->sheets[0]['cells'][$i][1]);
 					$lName = trim($data->sheets[0]['cells'][$i][2]);
 					$personalGreeting = (isset($data->sheets[0]['cells'][$i][4])) ? $personalGreeting = $data->sheets[0]['cells'][$i][4] : "";
+          $passcode = (isset($data->sheets[0]['cells'][$i][5])) ? $data->sheets[0]['cells'][$i][5] : "";
 					if(!empty($fName) && !empty($lName)) {
 						$sql = "SELECT id FROM ".ATTENDEES_TABLE." 
 						 	WHERE firstName = %s AND lastName = %s ";
@@ -628,8 +642,9 @@ License: GPL
 						if(count($res) == 0) {
 							$wpdb->insert(ATTENDEES_TABLE, array("firstName" 				=> $fName, 
 																									 "lastName" 				=> $lName,
-																									 "personalGreeting" => $personalGreeting), 
-																						 array('%s', '%s', '%s'));
+																									 "personalGreeting" => $personalGreeting, 
+                                                   "passcode"         => $passcode), 
+																						 array('%s', '%s', '%s', '%s'));
 							$count++;
 						}
 					}
@@ -693,10 +708,10 @@ License: GPL
 			<form name="rsvp_import" method="post" enctype="multipart/form-data">
 				<?php wp_nonce_field('rsvp-import'); ?>
 				<p>Select an excel file (only xls please, xlsx is not supported....yet) in the following format:<br />
-				<strong>First Name</strong> | <strong>Last Name</strong> | <strong>Associated Attendees*</strong> | <strong>Custom Message</strong>
+				<strong>First Name</strong> | <strong>Last Name</strong> | <strong>Associated Attendees*</strong> | <strong>Custom Message</strong> | <strong>Passcode</strong>
 				</p>
 				<p>
-				* associated attendees should be separated by a comma it is assumed that the first space encounted will separate the first and last name.
+				* associated attendees should be separated by a comma it is assumed that the first space encountered will separate the first and last name.
 				</p>
 				<p>A header row is not expected.</p>
 				<p><input type="file" name="importFile" id="importFile" /></p>
@@ -1296,6 +1311,7 @@ License: GPL
 		register_setting('rsvp-option-group', OPTION_RSVP_QUESTION);
 		register_setting('rsvp-option-group', OPTION_RSVP_CUSTOM_YES_NO);
 		register_setting('rsvp-option-group', OPTION_RSVP_PASSCODE);
+    register_setting('rsvp-option-group', RSVP_OPTION_HIDE_NOTE);
 		
 		wp_register_script('jquery_table_sort', plugins_url('jquery.tablednd_0_5.js',__FILE__));
 		wp_register_script('jquery_ui', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.ui/1.8.5/jquery-ui.js");
@@ -1342,6 +1358,18 @@ License: GPL
 		}
 		return "http";
 	}
+  
+  function rsvp_getCurrentPageURL() {
+     $pageURL = rsvp_getHttpProtocol();
+     
+     $pageURL .= "://";
+     if ($_SERVER["SERVER_PORT"] != "80") {
+      $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+     } else {
+      $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+     }
+     return $pageURL;
+  }
 	
 	add_action('admin_menu', 'rsvp_modify_menu');
 	add_action('admin_init', 'rsvp_register_settings');

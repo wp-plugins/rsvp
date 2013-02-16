@@ -71,6 +71,14 @@ I will see if I can get it added for you.
 
 == Changelog ==
 
+= 1.6.5 =
+* Fixed another bug so that the RSVP form works with more single page layouts
+* Fixed some layout issues related to whitespace in the output
+* Added an option to hide the note field from the front-end
+* Added passcodes to the export
+* Added passcodes to the import 
+* Made it so all of the front-end text was translatable 
+
 = 1.6.2 = 
 * Fixed a bug so that the rsvp form works with single page layouts
 * Fixed a bug where the passcode was not being checked. Thanks to Jency Rijckoort for reporting the issue. 
