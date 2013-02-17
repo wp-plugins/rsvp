@@ -813,11 +813,11 @@ License: GPL
 				</p>
 				<table class="form-table">
 					<tr valign="top">
-						<th scope="row"><label for="firstName">First Name:</label></th>
+						<th scope="row"><label for="firstName"><?php echo __("First Name", 'rsvp-plugin'); ?>:</label></th>
 						<td align="left"><input type="text" name="firstName" id="firstName" size="30" value="<?php echo htmlentities($firstName); ?>" /></td>
 					</tr>
 					<tr valign="top">
-						<th scope="row"><label for="lastName">Last Name:</label></th>
+						<th scope="row"><label for="lastName"><?php echo __("Last Name", 'rsvp-plugin'); ?>:</label></th>
 						<td align="left"><input type="text" name="lastName" id="lastName" size="30" value="<?php echo htmlentities($lastName); ?>" /></td>
 					</tr>
 					<?php

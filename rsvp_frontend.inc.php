@@ -112,13 +112,14 @@ function rsvp_handleAdditionalQuestions($attendeeID, $formName) {
 function rsvp_frontend_prompt_to_edit($attendee) {
   global $rsvp_form_action;
   $prompt = RSVP_START_CONTAINER; 
-	$prompt .= sprintf(__(RSVP_START_PARA."Hi %s it looks like you have already RSVP'd. Would you like to edit your reservation?".RSVP_END_PARA, 'rsvp-plugin'), 
+  $editGreeting = __("Hi %s it looks like you have already RSVP'd. Would you like to edit your reservation?", 'rsvp-plugin');
+	$prompt .= sprintf(RSVP_START_PARA.$editGreeting.RSVP_END_PARA, 
                      htmlspecialchars(stripslashes($attendee->firstName." ".$attendee->lastName)));
 	$prompt .= "<form method=\"post\" action=\"$rsvp_form_action\">\r\n
 								<input type=\"hidden\" name=\"attendeeID\" value=\"".$attendee->id."\" />
 								<input type=\"hidden\" name=\"rsvpStep\" id=\"rsvpStep\" value=\"editattendee\" />
-								<input type=\"submit\" value=\"Yes\" onclick=\"document.getElementById('rsvpStep').value='editattendee';\" />
-								<input type=\"submit\" value=\"No\" onclick=\"document.getElementById('rsvpStep').value='newsearch';\"  />
+								<input type=\"submit\" value=\"".__("Yes", 'rsvp-plugin')."\" onclick=\"document.getElementById('rsvpStep').value='editattendee';\" />
+								<input type=\"submit\" value=\"".__("No", 'rsvp-plugin')."\" onclick=\"document.getElementById('rsvpStep').value='newsearch';\"  />
 							</form>\r\n";
   $prompt .= RSVP_END_CONTAINER;
 	return $prompt;
@@ -679,12 +680,12 @@ function rsvp_frontend_greeting() {
   $output .= RSVP_START_CONTAINER;
 	$output .= "<form name=\"rsvp\" method=\"post\" id=\"rsvp\" action=\"$rsvp_form_action\">\r\n";
 	$output .= "	<input type=\"hidden\" name=\"rsvpStep\" value=\"find\" />";
-	$output .= RSVP_START_PARA."<label for=\"firstName\">First Name:</label> 
+	$output .= RSVP_START_PARA."<label for=\"firstName\">".__("First Name", 'rsvp-plugin').":</label> 
 								 <input type=\"text\" name=\"firstName\" id=\"firstName\" size=\"30\" value=\"".htmlspecialchars($firstName)."\" class=\"required\" />".RSVP_END_PARA;
-	$output .= RSVP_START_PARA."<label for=\"lastName\">Last Name:</label> 
+	$output .= RSVP_START_PARA."<label for=\"lastName\">".__("Last Name", 'rsvp-plugin').":</label> 
 								 <input type=\"text\" name=\"lastName\" id=\"lastName\" size=\"30\" value=\"".htmlspecialchars($lastName)."\" class=\"required\" />".RSVP_END_PARA;
 	if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
-		$output .= RSVP_START_PARA."<label for=\"passcode\">Passcode:</label> 
+		$output .= RSVP_START_PARA."<label for=\"passcode\">".__("Passcode", 'rsvp-plugin').":</label> 
 									 <input type=\"text\" name=\"passcode\" id=\"passcode\" size=\"30\" value=\"".htmlspecialchars($passcode)."\" class=\"required\" />".RSVP_END_PARA;
 	}
 	$output .= RSVP_START_PARA."<input type=\"submit\" value=\"".__("Complete your RSVP!", 'rsvp-plugin')."\" />".RSVP_END_PARA;
