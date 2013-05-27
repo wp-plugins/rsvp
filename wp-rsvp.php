@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.6.5
+ * @version 1.7.0
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Text Domain: rsvp-plugin
 Plugin URI: http://wordpress.org/extend/plugins/rsvp/
 Description: This plugin allows guests to RSVP to an event.  It was made initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.6.5
+Version: 1.7.0
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -56,6 +56,7 @@ License: GPL
 	define("OPTION_RSVP_QUESTION", "rsvp_custom_question_text");
 	define("OPTION_RSVP_CUSTOM_YES_NO", "rsvp_custom_yes_no");
 	define("OPTION_RSVP_PASSCODE", "rsvp_passcode");
+  define("OPTION_RSVP_OPEN_REGISTRATION", "rsvp_open_registration");
 	define("RSVP_DB_VERSION", "9");
 	define("QT_SHORT", "shortAnswer");
 	define("QT_MULTI", "multipleChoice");
@@ -107,6 +108,10 @@ License: GPL
 			$wpdb->query($sql);
 		}
 	}
+  
+  function rsvp_require_passcode() {
+    return ((get_option(OPTION_RSVP_PASSCODE) == "Y") || (get_option(OPTION_RSVP_OPEN_REGISTRATION) == "Y"));
+  }
 	
 	/**
 	 * This generates a random 6 character passcode to be used for guests when the option is enabled.
@@ -125,7 +130,7 @@ License: GPL
 
 	function rsvp_admin_guestlist_options() {
 		
-		if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+		if(rsvp_require_passcode()) {
 			global $wpdb;
 			
 			rsvp_install_passcode_field();
@@ -253,6 +258,11 @@ License: GPL
 						<td align="left"><input type="checkbox" name="<?php echo OPTION_RSVP_PASSCODE; ?>" id="<?php echo OPTION_RSVP_PASSCODE; ?>" value="Y" 
 							 <?php echo ((get_option(OPTION_RSVP_PASSCODE) == "Y") ? " checked=\"checked\"" : ""); ?> /></td>
 					</tr>
+          <tr valign="top">
+            <th scope="row"><label for="<?PHP echo OPTION_RSVP_OPEN_REGISTRATION; ?>">Allow Open Registration (note - this will force passcodes for attendees):</label></th>
+            <td align="left"><input type="checkbox" name="<?php echo OPTION_RSVP_OPEN_REGISTRATION; ?>" id="<?php echo OPTION_RSVP_OPEN_REGISTRATION; ?>" value="Y" 
+               <?php echo ((get_option(OPTION_RSVP_OPEN_REGISTRATION) == "Y") ? " checked=\"checked\"" : ""); ?> /></td>
+          </tr>
 					<tr valign="top">
 						<th scope="row"><label for="rsvp_debug_queries">Debug RSVP Queries:</label></th>
 						<td align="left"><input type="checkbox" name="rsvp_debug_queries" id="rsvp_debug_queries" 
@@ -419,7 +429,7 @@ License: GPL
 						<th scope="col" id="customMessage" class="manage-column column-title" style="">Custom Message</th>
 						<th scope="col" id="note" class="manage-column column-title" style="">Note</th>
 						<?php
-						if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+						if(rsvp_require_passcode()) {
 						?>
 							<th scope="col" id="passcode" class="manage-column column-title" style="">Passcode</th>
 						<?php
@@ -481,7 +491,7 @@ License: GPL
 							?></td>
 							<td><?php echo nl2br(stripslashes(trim($attendee->note))); ?></td>
 							<?php
-							if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+							if(rsvp_require_passcode()) {
 							?>
 								<td><?php echo $attendee->passcode; ?></td>
 							<?php	
@@ -554,7 +564,7 @@ License: GPL
 			if(get_option(OPTION_HIDE_VEGGIE) != "Y") {
 				$csv .= "\"Vegatarian\",";
 			}
-      if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+      if(rsvp_require_passcode()) {
         $csv .= "\"Passcode\",";
       }
 			$csv .= "\"Note\",\"Associated Attendees\"";
@@ -580,7 +590,7 @@ License: GPL
 					$csv .= "\"".(($a->veggieMeal == "Y") ? "Yes" : "No")."\",";
 				}
         
-        if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+        if(rsvp_require_passcode()) {
           $csv .= "\"".(($a->passcode))."\",";
         }
 				
@@ -759,7 +769,7 @@ License: GPL
 				}
 			}
 			
-			if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+			if(rsvp_require_passcode()) {
 				if(empty($passcode)) {
 					$passcode = rsvp_generate_passcode();
 				}
@@ -821,7 +831,7 @@ License: GPL
 						<td align="left"><input type="text" name="lastName" id="lastName" size="30" value="<?php echo htmlentities($lastName); ?>" /></td>
 					</tr>
 					<?php
-					if(get_option(OPTION_RSVP_PASSCODE) == "Y") {
+					if(rsvp_require_passcode()) {
 					?>
 						<tr valign="top">
 							<th scope="row"><label for="passcode">Passcode:</label></th>
@@ -1312,6 +1322,7 @@ License: GPL
 		register_setting('rsvp-option-group', OPTION_RSVP_CUSTOM_YES_NO);
 		register_setting('rsvp-option-group', OPTION_RSVP_PASSCODE);
     register_setting('rsvp-option-group', RSVP_OPTION_HIDE_NOTE);
+    register_setting('rsvp-option-group', OPTION_RSVP_OPEN_REGISTRATION);
 		
 		wp_register_script('jquery_table_sort', plugins_url('jquery.tablednd_0_5.js',__FILE__));
 		wp_register_script('jquery_ui', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.ui/1.8.5/jquery-ui.js");
