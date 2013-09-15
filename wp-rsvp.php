@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.7.0
+ * @version 1.7.2
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Text Domain: rsvp-plugin
 Plugin URI: http://wordpress.org/extend/plugins/rsvp/
 Description: This plugin allows guests to RSVP to an event.  It was made initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.7.0
+Version: 1.7.2
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -57,6 +57,7 @@ License: GPL
 	define("OPTION_RSVP_CUSTOM_YES_NO", "rsvp_custom_yes_no");
 	define("OPTION_RSVP_PASSCODE", "rsvp_passcode");
   define("OPTION_RSVP_OPEN_REGISTRATION", "rsvp_open_registration");
+  define("OPTION_RSVP_DONT_USE_HASH", "rsvp_dont_use_has");
 	define("RSVP_DB_VERSION", "9");
 	define("QT_SHORT", "shortAnswer");
 	define("QT_MULTI", "multipleChoice");
@@ -262,6 +263,11 @@ License: GPL
             <th scope="row"><label for="<?PHP echo OPTION_RSVP_OPEN_REGISTRATION; ?>">Allow Open Registration (note - this will force passcodes for attendees):</label></th>
             <td align="left"><input type="checkbox" name="<?php echo OPTION_RSVP_OPEN_REGISTRATION; ?>" id="<?php echo OPTION_RSVP_OPEN_REGISTRATION; ?>" value="Y" 
                <?php echo ((get_option(OPTION_RSVP_OPEN_REGISTRATION) == "Y") ? " checked=\"checked\"" : ""); ?> /></td>
+          </tr>
+          <tr valign="top">
+            <th scope="row"><label for="<?PHP echo OPTION_RSVP_DONT_USE_HASH; ?>">Do not scroll page to the top of the RSVP form:</label></th>
+            <td align="left"><input type="checkbox" name="<?php echo OPTION_RSVP_DONT_USE_HASH; ?>" id="<?php echo OPTION_RSVP_DONT_USE_HASH; ?>" value="Y" 
+               <?php echo ((get_option(OPTION_RSVP_DONT_USE_HASH) == "Y") ? " checked=\"checked\"" : ""); ?> /></td>
           </tr>
 					<tr valign="top">
 						<th scope="row"><label for="rsvp_debug_queries">Debug RSVP Queries:</label></th>
@@ -1323,6 +1329,7 @@ License: GPL
 		register_setting('rsvp-option-group', OPTION_RSVP_PASSCODE);
     register_setting('rsvp-option-group', RSVP_OPTION_HIDE_NOTE);
     register_setting('rsvp-option-group', OPTION_RSVP_OPEN_REGISTRATION);
+    register_setting('rsvp-option-group', OPTION_RSVP_DONT_USE_HASH);
 		
 		wp_register_script('jquery_table_sort', plugins_url('jquery.tablednd_0_5.js',__FILE__));
 		wp_register_script('jquery_ui', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.ui/1.8.5/jquery-ui.js");
@@ -1364,7 +1371,7 @@ License: GPL
 	Postcondition: The caller will receive the proper HTTP protocol to use at the beginning of a URL. 
 	*/
 	function rsvp_getHttpProtocol() {
-		if(isset($_SERVER['HTTPS'])  && (trim($_SERVER['HTTPS']) != "")) {
+		if(isset($_SERVER['HTTPS'])  && (trim($_SERVER['HTTPS']) != "") && (strtolower(trim($_SERVER['HTTPS'])) != "off")) {
 			return "https";
 		}
 		return "http";

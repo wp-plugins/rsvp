@@ -3,8 +3,8 @@ Contributors: mdedev
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=mikede%40mde%2ddev%2ecom&lc=US&item_name=Wordpress%20RSVP%20Plugin&no_note=0&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHostedGuest
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 3.0
-Tested up to: 3.5.0
-Stable tag: 1.7.0
+Tested up to: 3.6.1
+Stable tag: 1.7.2
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -48,6 +48,7 @@ Available CSS Stylings:
 * rsvpBorderTop - Class for setting a top border on certain divs in the main input form
 * rsvpCheckboxCustomQ - Class for the div that surrounds each custom question checkbox 
 * rsvpClear - A class for div elements that we want to use to set clear both. Currently used only next to rsvpCheckboxCustomQs as they are floated
+* rsvpAdditionalAttendeeQuestions - Class name for the div that wraps around all additional attendee questions
 
 == Installation ==
 
@@ -70,6 +71,14 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.7.2 = 
+* Improved the queries to find related attendees when a person RSVPs
+* Incorporated an SSL check fix found at http://wordpress.org/support/topic/https-problem-1
+* Fixed an issue with a warning for an insert query. Notified by Chase Nimmer. 
+* Changed the passcode field to a password and made it so was not set to autocomplete for browsers.
+* Added in a div container for additional attendee questions so JavaScript modifications could be done.
+* Added in an option to not scroll down to the RSVP form when a form post happened.
 
 = 1.7.0 =
 * Added the ability to do open registrations

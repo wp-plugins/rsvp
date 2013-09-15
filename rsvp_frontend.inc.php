@@ -1,6 +1,9 @@
 <?php 
 $rsvp_form_action = htmlspecialchars(rsvp_getCurrentPageURL());
-$rsvp_form_action .= "#rsvpArea";
+
+if(get_option(OPTION_RSVP_DONT_USE_HASH) != "Y") {
+  $rsvp_form_action .= "#rsvpArea";
+}
 $rsvp_saved_form_vars = array();
 
 function rsvp_handle_output ($intialText, $rsvpText) {	
@@ -234,9 +237,13 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
   }
 	$sql = "SELECT id, firstName, lastName FROM ".ATTENDEES_TABLE." 
 	 	WHERE (id IN (SELECT attendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE associatedAttendeeID = %d) 
-			OR id in (SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeID = %d)) 
+			OR id in (SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeID = %d) OR 
+      id IN (SELECT waa1.attendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." waa1 
+           INNER JOIN ".ASSOCIATED_ATTENDEES_TABLE." waa2 ON waa2.attendeeID = waa1.attendeeID  OR 
+                                                     waa1.associatedAttendeeID = waa2.attendeeID 
+           WHERE waa2.associatedAttendeeID = %d AND waa1.attendeeID <> %d)) 
 			 AND rsvpStatus <> 'NoResponse'";
-	$rsvpd = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
+	$rsvpd = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID, $attendeeID, $attendeeID));
 	if(count($rsvpd) > 0) {
     $form .= "<div class=\"rsvpAdditionalAttendee\">\r\n";
 		$form .= RSVP_START_PARA.__("The following people associated with you have already registered:", 'rsvp-plugin')." ";
@@ -249,50 +256,57 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 	
 	$sql = "SELECT id, firstName, lastName, personalGreeting FROM ".ATTENDEES_TABLE." 
 	 	WHERE (id IN (SELECT attendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE associatedAttendeeID = %d) 
-			OR id in (SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeID = %d)) 
+			OR id in (SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeID = %d) OR 
+      id IN (SELECT waa1.attendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." waa1 
+           INNER JOIN ".ASSOCIATED_ATTENDEES_TABLE." waa2 ON waa2.attendeeID = waa1.attendeeID  OR 
+                                                     waa1.associatedAttendeeID = waa2.attendeeID 
+           WHERE waa2.associatedAttendeeID = %d AND waa1.attendeeID <> %d)) 
 			 AND rsvpStatus = 'NoResponse'";
 	
-	$associations = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
+	$associations = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID, $attendeeID, $attendeeID));
 	if(count($associations) > 0) {
 		$form .= "<h3>".__("The following people are associated with you.  At this time you can RSVP for them as well.", 'rsvp-plugin')."</h3>";
 		foreach($associations as $a) {
-			$form .= "<div class=\"rsvpAdditionalAttendee\">\r\n".
-							RSVP_START_PARA."<label for=\"rsvpFor".$a->id."\">".
-                  sprintf(__("RSVP for %s ?",'rsvp-plugin'), htmlspecialchars($a->firstName." ".$a->lastName))."</label> ". 
-									"<input type=\"checkbox\" name=\"rsvpFor".$a->id."\" id=\"rsvpFor".$a->id."\" value=\"Y\" />".RSVP_END_PARA;
+      if($a->id != $attendeeID) {
+  			$form .= "<div class=\"rsvpAdditionalAttendee\">\r\n".
+  							RSVP_START_PARA."<label for=\"rsvpFor".$a->id."\">".
+                    sprintf(__("RSVP for %s ?",'rsvp-plugin'), htmlspecialchars($a->firstName." ".$a->lastName))."</label> ". 
+  									"<input type=\"checkbox\" name=\"rsvpFor".$a->id."\" id=\"rsvpFor".$a->id."\" value=\"Y\" />".RSVP_END_PARA;
+        $form .= "<div class=\"rsvpAdditionalAttendeeQuestions\">\r\n";
+  			$form .= rsvp_BeginningFormField("", "").sprintf(__(" Will %s be attending?", 'rsvp-plugin'), htmlspecialchars($a->firstName)).
+                "<input type=\"radio\" name=\"attending".$a->id."\" value=\"Y\" id=\"attending".$a->id."Y\" checked=\"checked\" /> ".
+                "<label for=\"attending".$a->id."Y\">$yesText</label> 
+  							<input type=\"radio\" name=\"attending".$a->id."\" value=\"N\" id=\"attending".$a->id."N\" /> ".
+                "<label for=\"attending".$a->id."N\">$noText</label>".
+                RSVP_END_FORM_FIELD;
 			
-			$form .= rsvp_BeginningFormField("", "").sprintf(__(" Will %s be attending?", 'rsvp-plugin'), htmlspecialchars($a->firstName)).
-              "<input type=\"radio\" name=\"attending".$a->id."\" value=\"Y\" id=\"attending".$a->id."Y\" checked=\"checked\" /> ".
-              "<label for=\"attending".$a->id."Y\">$yesText</label> 
-							<input type=\"radio\" name=\"attending".$a->id."\" value=\"N\" id=\"attending".$a->id."N\" /> ".
-              "<label for=\"attending".$a->id."N\">$noText</label>".
-              RSVP_END_FORM_FIELD;
+  			if(!empty($a->personalGreeting)) {
+  				$form .= RSVP_START_PARA.nl2br($a->personalGreeting).RSVP_END_PARA;
+  			}
 			
-			if(!empty($a->personalGreeting)) {
-				$form .= RSVP_START_PARA.nl2br($a->personalGreeting).RSVP_END_PARA;
-			}
+  			if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
+  				$form .= rsvp_BeginningFormField("", "").
+            sprintf(__("Does %s need a kids meal?", 'rsvp-plugin'), htmlspecialchars($a->firstName))."&nbsp; ".
+            "<input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"Y\" id=\"attending".$a->id."KidsMealY\" /> ".
+  					"<label for=\"attending".$a->id."KidsMealY\">$yesText</label> 
+  					<input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"N\" id=\"attending".$a->id."KidsMealN\" checked=\"checked\" /> ".
+  					"<label for=\"attending".$a->id."KidsMealN\">$noText</label>".RSVP_END_FORM_FIELD;
+  			}
 			
-			if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
-				$form .= rsvp_BeginningFormField("", "").
-          sprintf(__("Does %s need a kids meal?", 'rsvp-plugin'), htmlspecialchars($a->firstName))."&nbsp; ".
-          "<input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"Y\" id=\"attending".$a->id."KidsMealY\" /> ".
-					"<label for=\"attending".$a->id."KidsMealY\">$yesText</label> 
-					<input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"N\" id=\"attending".$a->id."KidsMealN\" checked=\"checked\" /> ".
-					"<label for=\"attending".$a->id."KidsMealN\">$noText</label>".RSVP_END_FORM_FIELD;
-			}
+  			if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
+  				$form .= rsvp_BeginningFormField("", "").
+                  sprintf(__("Does %s need a vegetarian meal?", 'rsvp-plugin'), htmlspecialchars($a->firstName))."&nbsp; ".
+      						"<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"Y\" id=\"attending".$a->id."VeggieMealY\" /> ".
+      						"<label for=\"attending".$a->id."VeggieMealY\">$yesText</label> 
+      						<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"N\" id=\"attending".$a->id."VeggieMealN\" checked=\"checked\" /> ".
+      						"<label for=\"attending".$a->id."VeggieMealN\">$noText</label>".RSVP_END_FORM_FIELD;
+  			}
 			
-			if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
-				$form .= rsvp_BeginningFormField("", "").
-                sprintf(__("Does %s need a vegetarian meal?", 'rsvp-plugin'), htmlspecialchars($a->firstName))."&nbsp; ".
-    						"<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"Y\" id=\"attending".$a->id."VeggieMealY\" /> ".
-    						"<label for=\"attending".$a->id."VeggieMealY\">$yesText</label> 
-    						<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"N\" id=\"attending".$a->id."VeggieMealN\" checked=\"checked\" /> ".
-    						"<label for=\"attending".$a->id."VeggieMealN\">$noText</label>".RSVP_END_FORM_FIELD;
-			}
-			
-			$form .= rsvp_buildAdditionalQuestions($a->id, $a->id);
-			$form .= "</div>\r\n";
-		}
+  			$form .= rsvp_buildAdditionalQuestions($a->id, $a->id);
+        $form .= "</div>\r\n"; //-- rsvpAdditionalAttendeeQuestions
+  			$form .= "</div>\r\n";
+		  } // if($a->id != ...)
+    } // foreach($associations...)
 	}
 	
 	if(get_option(OPTION_HIDE_ADD_ADDITIONAL) != "Y") {
@@ -317,6 +331,7 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 										alert('".__("You have already added 3 additional rsvp\'s you can add no more.", 'rsvp-plugin')."');
 									} else {
 										jQuery(\"#additionalRsvpContainer\").append(\"<div class=\\\"rsvpAdditionalAttendee\\\">\" + \r\n
+                        \"<div class=\\\"rsvpAdditionalAttendeeQuestions\\\">\" + \r\n
 												\"<div class=\\\"rsvpFormField\\\">\" + \r\n
                         \"	<label for=\\\"newAttending\" + numAdditional + \"FirstName\\\">".__("Person's first name", 'rsvp-plugin')."&nbsp;</label>\" + \r\n 
 													\"  <input type=\\\"text\\\" name=\\\"newAttending\" + numAdditional + \"FirstName\\\" id=\\\"newAttending\" + numAdditional + \"FirstName\\\" />\" + \r\n
@@ -338,6 +353,7 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 														\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealY\\\">$yesText</label> \" + 
 														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealN\\\" checked=\\\"checked\\\" /> \" + 
 														\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealN\\\">$noText</label>\" + 
+                          \"</div>\" + 
 													\"</div>\" + \r\n";
 												}
 												if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
@@ -709,7 +725,7 @@ function rsvp_handlersvp(&$output, &$text) {
 						$wpdb->query($wpdb->prepare("INSERT INTO ".ASSOCIATED_ATTENDEES_TABLE."(attendeeID, associatedAttendeeID)
 																				 SELECT ".$newAid.", associatedAttendeeID 
 																				 FROM ".ASSOCIATED_ATTENDEES_TABLE." 
-																				 WHERE attendeeID = ".$attendeeID));
+																				 WHERE attendeeID = %d", $attendeeID));
 						rsvp_printQueryDebugInfo();
 					}
 				}
@@ -861,7 +877,7 @@ function rsvp_frontend_greeting() {
 								 <input type=\"text\" name=\"lastName\" id=\"lastName\" size=\"30\" value=\"".htmlspecialchars($lastName)."\" class=\"required\" />".RSVP_END_PARA;
 	if(rsvp_require_passcode()) {
 		$output .= RSVP_START_PARA."<label for=\"passcode\">".__("Passcode", 'rsvp-plugin').":</label> 
-									 <input type=\"text\" name=\"passcode\" id=\"passcode\" size=\"30\" value=\"".htmlspecialchars($passcode)."\" class=\"required\" />".RSVP_END_PARA;
+									 <input type=\"password\" name=\"passcode\" id=\"passcode\" size=\"30\" value=\"".htmlspecialchars($passcode)."\" class=\"required\" autocomplete=\"off\" />".RSVP_END_PARA;
 	}
 	$output .= RSVP_START_PARA."<input type=\"submit\" value=\"".__("Complete your RSVP!", 'rsvp-plugin')."\" />".RSVP_END_PARA;
 	$output .= "</form>\r\n";
