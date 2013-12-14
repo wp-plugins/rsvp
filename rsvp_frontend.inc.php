@@ -5,6 +5,9 @@ if(get_option(OPTION_RSVP_DONT_USE_HASH) != "Y") {
   $rsvp_form_action .= "#rsvpArea";
 }
 $rsvp_saved_form_vars = array();
+// load some defaults
+$rsvp_saved_form_vars['mainRsvp'] = "";
+$rsvp_saved_form_vars['rsvp_note'] = "";
 
 function rsvp_handle_output ($intialText, $rsvpText) {	
   $rsvpText = "<a name=\"rsvpArea\" id=\"rsvpArea\"></a>".$rsvpText;
@@ -169,7 +172,7 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 	$noteVerbiage = ((trim(get_option(OPTION_NOTE_VERBIAGE)) != "") ? get_option(OPTION_NOTE_VERBIAGE) : 
 		__("If you have any <strong style=\"color:red;\">food allergies</strong>, please indicate what they are in the &quot;notes&quot; section below.  Or, if you just want to send us a note, please feel free.  If you have any questions, please send us an email.", 'rsvp-plugin'));
     
-	$form = "<form id=\"rsvpForm\" name=\"rsvpForm\" method=\"post\" action=\"$rsvp_form_action\">\r\n";
+	$form = "<form id=\"rsvpForm\" name=\"rsvpForm\" method=\"post\" action=\"$rsvp_form_action\" autocomplete=\"off\">\r\n";
 	$form .= "	<input type=\"hidden\" name=\"attendeeID\" value=\"".$attendeeID."\" />\r\n";
 	$form .= "	<input type=\"hidden\" name=\"rsvpStep\" value=\"$rsvpStep\" />\r\n";
 	
@@ -869,7 +872,7 @@ function rsvp_frontend_greeting() {
     $output .= RSVP_START_PARA.__("Need to modify your registration? Start with the below form.", "rsvp-plugin").RSVP_END_PARA;
   }
   
-	$output .= "<form name=\"rsvp\" method=\"post\" id=\"rsvp\" action=\"$rsvp_form_action\">\r\n";
+	$output .= "<form name=\"rsvp\" method=\"post\" id=\"rsvp\" action=\"$rsvp_form_action\" autocomplete=\"off\">\r\n";
 	$output .= "	<input type=\"hidden\" name=\"rsvpStep\" value=\"find\" />";
 	$output .= RSVP_START_PARA."<label for=\"firstName\">".__("First Name", 'rsvp-plugin').":</label> 
 								 <input type=\"text\" name=\"firstName\" id=\"firstName\" size=\"30\" value=\"".htmlspecialchars($firstName)."\" class=\"required\" />".RSVP_END_PARA;

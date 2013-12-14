@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.7.2
+ * @version 1.7.3
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Text Domain: rsvp-plugin
 Plugin URI: http://wordpress.org/extend/plugins/rsvp/
 Description: This plugin allows guests to RSVP to an event.  It was made initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.7.2
+Version: 1.7.3
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -447,7 +447,7 @@ License: GPL
 							if(count($qRs) > 0) {
 								foreach($qRs as $q) {
 						?>
-							<th scope="col" class="manage-column -column-title"><?php echo htmlentities(stripslashes($q->question)); ?></th>
+							<th scope="col" class="manage-column -column-title"><?php echo htmlspecialchars(stripslashes($q->question)); ?></th>
 						<?php		
 								}
 							}
@@ -465,7 +465,7 @@ License: GPL
 						<tr class="<?php echo (($i % 2 == 0) ? "alternate" : ""); ?> author-self">
 							<th scope="row" class="check-column"><input type="checkbox" name="attendee[]" value="<?php echo $attendee->id; ?>" /></th>						
 							<td>
-								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-guest&amp;id=<?php echo $attendee->id; ?>"><?php echo htmlentities(stripslashes($attendee->firstName)." ".stripslashes($attendee->lastName)); ?></a>
+								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-guest&amp;id=<?php echo $attendee->id; ?>"><?php echo htmlspecialchars(stripslashes($attendee->firstName)." ".stripslashes($attendee->lastName)); ?></a>
 							</td>
 							<td><?php echo $attendee->rsvpStatus; ?></td>
 							<?php if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {?>
@@ -509,7 +509,7 @@ License: GPL
 								if(count($aRs) > 0) {
 									foreach($aRs as $a) {
 							?>
-									<td><?php echo htmlentities(stripslashes($a->answer)); ?></td>
+									<td><?php echo htmlspecialchars(stripslashes($a->answer)); ?></td>
 							<?php
 									}
 								}
@@ -522,7 +522,7 @@ License: GPL
 							
 								$associations = $wpdb->get_results($wpdb->prepare($sql, $attendee->id, $attendee->id));
 								foreach($associations as $a) {
-									echo htmlentities(stripslashes($a->firstName." ".$a->lastName))."<br />";
+									echo htmlspecialchars(stripslashes($a->firstName." ".$a->lastName))."<br />";
 								}
 							?>
 							</td>
@@ -786,7 +786,7 @@ License: GPL
 											array("%d"));
 			}
 		?>
-			<p>Attendee <?php echo htmlentities(stripslashes($_POST['firstName']." ".$_POST['lastName']));?> has been successfully saved</p>
+			<p>Attendee <?php echo htmlspecialchars(stripslashes($_POST['firstName']." ".$_POST['lastName']));?> has been successfully saved</p>
 			<p>
 				<a href="<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?page=rsvp-top-level">Continue to Attendee List</a> | 
 				<a href="<?php echo get_option('siteurl'); ?>/wp-admin/admin.php?page=rsvp-admin-guest">Add a Guest</a> 
@@ -830,18 +830,18 @@ License: GPL
 				<table class="form-table">
 					<tr valign="top">
 						<th scope="row"><label for="firstName"><?php echo __("First Name", 'rsvp-plugin'); ?>:</label></th>
-						<td align="left"><input type="text" name="firstName" id="firstName" size="30" value="<?php echo htmlentities($firstName); ?>" /></td>
+						<td align="left"><input type="text" name="firstName" id="firstName" size="30" value="<?php echo htmlspecialchars($firstName); ?>" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row"><label for="lastName"><?php echo __("Last Name", 'rsvp-plugin'); ?>:</label></th>
-						<td align="left"><input type="text" name="lastName" id="lastName" size="30" value="<?php echo htmlentities($lastName); ?>" /></td>
+						<td align="left"><input type="text" name="lastName" id="lastName" size="30" value="<?php echo htmlspecialchars($lastName); ?>" /></td>
 					</tr>
 					<?php
 					if(rsvp_require_passcode()) {
 					?>
 						<tr valign="top">
 							<th scope="row"><label for="passcode">Passcode:</label></th>
-							<td align="left"><input type="text" name="passcode" id="passcode" size="30" value="<?php echo htmlentities($passcode); ?>" maxlength="6" /></td>
+							<td align="left"><input type="text" name="passcode" id="passcode" size="30" value="<?php echo htmlspecialchars($passcode); ?>" maxlength="6" /></td>
 						</tr>
 					<?php	
 					}					
@@ -864,7 +864,7 @@ License: GPL
 					</tr>
 					<tr valign="top">
 						<th scope="row" valign="top"><label for="personalGreeting">Custom Message:</label></th>
-						<td align="left"><textarea name="personalGreeting" id="personalGreeting" rows="5" cols="40"><?php echo htmlentities($personalGreeting); ?></textarea></td>
+						<td align="left"><textarea name="personalGreeting" id="personalGreeting" rows="5" cols="40"><?php echo htmlspecialchars($personalGreeting); ?></textarea></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row">Associated Attendees:</th>
@@ -876,7 +876,7 @@ License: GPL
 										if($a->id != $_SESSION[EDIT_SESSION_KEY]) {
 								?>
 											<option value="<?php echo $a->id; ?>" 
-															<?php echo ((in_array($a->id, $associatedAttendees)) ? "selected=\"selected\"" : ""); ?>><?php echo htmlentities(stripslashes($a->firstName)." ".stripslashes($a->lastName)); ?></option>
+															<?php echo ((in_array($a->id, $associatedAttendees)) ? "selected=\"selected\"" : ""); ?>><?php echo htmlspecialchars(stripslashes($a->firstName)." ".stripslashes($a->lastName)); ?></option>
 								<?php
 										}
 									}
@@ -1009,7 +1009,7 @@ License: GPL
 						<tr class="<?php echo (($i % 2 == 0) ? "alternate" : ""); ?> author-self" id="<?php echo $q->id; ?>">
 							<th scope="row" class="check-column"><input type="checkbox" name="q[]" value="<?php echo $q->id; ?>" /></th>						
 							<td>
-								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-custom-question&amp;id=<?php echo $q->id; ?>"><?php echo htmlentities(stripslashes($q->question)); ?></a>
+								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-custom-question&amp;id=<?php echo $q->id; ?>"><?php echo htmlspecialchars(stripslashes($q->question)); ?></a>
 								<input type="hidden" name="sortOrder<?php echo $q->id; ?>" id="sortOrder<?php echo $q->id; ?>" value="<?php echo $q->sortOrder; ?>" />
 							</td>
 						</tr>
@@ -1199,7 +1199,7 @@ License: GPL
 						</tr>
 						<tr valign="top">
 							<th scope="row"><label for="question">Question:</label></th>
-							<td align="left"><input type="text" name="question" id="question" size="40" value="<?php echo htmlentities($question); ?>" /></td>
+							<td align="left"><input type="text" name="question" id="question" size="40" value="<?php echo htmlspecialchars($question); ?>" /></td>
 						</tr>
 						<tr>
 							<th scope="row"><label for="permissionLevel">Question Permission Level:</label></th>
@@ -1223,7 +1223,7 @@ License: GPL
 										?>
 												<tr>
 													<td width="75" align="right"><label for="answer<?php echo $answer->id; ?>">Answer:</label></td>
-													<td><input type="text" name="answer<?php echo $answer->id; ?>" id="answer<?php echo $answer->id; ?>" size="40" value="<?php echo htmlentities(stripslashes($answer->answer)); ?>" />
+													<td><input type="text" name="answer<?php echo $answer->id; ?>" id="answer<?php echo $answer->id; ?>" size="40" value="<?php echo htmlspecialchars(stripslashes($answer->answer)); ?>" />
 													 &nbsp; <input type="checkbox" name="deleteAnswer<?php echo $answer->id; ?>" id="deleteAnswer<?php echo $answer->id; ?>" value="Y" /><label for="deleteAnswer<?php echo $answer->id; ?>">Delete</label></td>
 												</tr>
 										<?php
@@ -1243,7 +1243,7 @@ License: GPL
 									foreach($attendees as $a) {
 								?>
 									<option value="<?php echo $a->id; ?>" 
-													<?php echo ((in_array($a->id, $savedAttendees)) ? " selected=\"selected\"" : ""); ?>><?php echo htmlentities(stripslashes($a->firstName)." ".stripslashes($a->lastName)); ?></option>
+													<?php echo ((in_array($a->id, $savedAttendees)) ? " selected=\"selected\"" : ""); ?>><?php echo htmlspecialchars(stripslashes($a->firstName)." ".stripslashes($a->lastName)); ?></option>
 								<?php
 									}
 								?>
