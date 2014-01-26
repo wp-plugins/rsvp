@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.7.3
+ * @version 1.7.4
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Text Domain: rsvp-plugin
 Plugin URI: http://wordpress.org/extend/plugins/rsvp/
 Description: This plugin allows guests to RSVP to an event.  It was made initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.7.3
+Version: 1.7.4
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -58,6 +58,7 @@ License: GPL
 	define("OPTION_RSVP_PASSCODE", "rsvp_passcode");
   define("OPTION_RSVP_OPEN_REGISTRATION", "rsvp_open_registration");
   define("OPTION_RSVP_DONT_USE_HASH", "rsvp_dont_use_has");
+  define("OPTION_RSVP_ADD_ADDITIONAL_VERBIAGE", "rsvp_add_additional_verbiage");
 	define("RSVP_DB_VERSION", "9");
 	define("QT_SHORT", "shortAnswer");
 	define("QT_MULTI", "multipleChoice");
@@ -244,6 +245,12 @@ License: GPL
 						<th scope="row"><label for="rsvp_hide_add_additional">Do not allow additional guests</label></th>
 						<td align="left"><input type="checkbox" name="rsvp_hide_add_additional" id="rsvp_hide_add_additional" value="Y" 
 							<?php echo ((get_option(OPTION_HIDE_ADD_ADDITIONAL) == "Y") ? " checked=\"checked\"" : ""); ?> /></td>
+					</tr>
+					<tr valign="top">
+						<th scope="row"><label for="<?php echo OPTION_RSVP_ADD_ADDITIONAL_VERBIAGE; ?>">Add Additional Verbiage:</label></th>
+						<td align="left">Default is: &quot;Did we slip up and forget to invite someone? If so, please add him or her here:&quot;<br />
+							<input type="text" name="<?php echo OPTION_RSVP_ADD_ADDITIONAL_VERBIAGE; ?>" id="<?php echo OPTION_RSVP_ADD_ADDITIONAL_VERBIAGE; ?>" 
+							value="<?php echo htmlspecialchars(get_option(OPTION_RSVP_ADD_ADDITIONAL_VERBIAGE)); ?>" size="65" /></td>
 					</tr>
 					<tr>
 						<th scope="row"><label for="rsvp_notify_when_rsvp">Notify When Guest RSVPs</label></th>
@@ -1258,12 +1265,13 @@ License: GPL
 	
 	function rsvp_modify_menu() {
 		
-		add_options_page('RSVP Options',	//page title
+		$page = add_options_page('RSVP Options',	//page title
 	                   'RSVP Options',	//subpage title
 	                   'manage_options',	//access
 	                   'rsvp-options',		//current file
 	                   'rsvp_admin_guestlist_options'	//options function above
 	                   );
+    add_action('admin_print_scripts-' . $page, 'rsvp_admin_scripts'); 
 		$page = add_menu_page("RSVP Plugin", 
 									"RSVP Plugin", 
 									"publish_posts", 
@@ -1330,15 +1338,18 @@ License: GPL
     register_setting('rsvp-option-group', RSVP_OPTION_HIDE_NOTE);
     register_setting('rsvp-option-group', OPTION_RSVP_OPEN_REGISTRATION);
     register_setting('rsvp-option-group', OPTION_RSVP_DONT_USE_HASH);
+    register_setting('rsvp-option-group', OPTION_RSVP_ADD_ADDITIONAL_VERBIAGE);
 		
-		wp_register_script('jquery_table_sort', plugins_url('jquery.tablednd_0_5.js',__FILE__));
+		wp_register_script('jquery_table_sort', plugins_url('jquery.tablednd_0_5.js',RSVP_PLUGIN_FILE));
 		wp_register_script('jquery_ui', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.ui/1.8.5/jquery-ui.js");
 		wp_register_style('jquery_ui_stylesheet', rsvp_getHttpProtocol()."://ajax.microsoft.com/ajax/jquery.ui/1.8.5/themes/redmond/jquery-ui.css");
 	}
 	
 	function rsvp_admin_scripts() {
-		wp_enqueue_script("jquery_table_sort");
-		wp_enqueue_script("jquery_ui");
+    wp_enqueue_script("jquery");
+		//wp_enqueue_script("jquery_ui");
+    wp_enqueue_script("jquery-ui-datepicker");
+    wp_enqueue_script("jquery_table_sort");
 		wp_enqueue_style( 'jquery_ui_stylesheet');
 	}
 	

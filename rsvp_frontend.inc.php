@@ -313,7 +313,13 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 	}
 	
 	if(get_option(OPTION_HIDE_ADD_ADDITIONAL) != "Y") {
-		$form .= "<h3>".__("Did we slip up and forget to invite someone? If so, please add him or her here:", 'rsvp-plugin')."</h3>\r\n";
+    $text = __("Did we slip up and forget to invite someone? If so, please add him or her here:", 'rsvp-plugin');
+    
+    if(trim(get_option(OPTION_RSVP_ADD_ADDITIONAL_VERBIAGE)) != "") {
+      $text = get_option(OPTION_RSVP_ADD_ADDITIONAL_VERBIAGE);
+    }
+    
+		$form .= "<h3>$text</h3>\r\n";
 		$form .= "<div id=\"additionalRsvpContainer\">\r\n
 								<input type=\"hidden\" name=\"additionalRsvp\" id=\"additionalRsvp\" value=\"".count($newRsvps)."\" />
 								<div style=\"text-align:right\"><img ".
@@ -650,6 +656,18 @@ function rsvp_handleNewRsvp(&$output, &$text) {
 						
 			$body .= stripslashes($attendee[0]->firstName)." ".stripslashes($attendee[0]->lastName).
 							 " has submitted their RSVP and has RSVP'd with '".$attendee[0]->rsvpStatus."'.";
+      
+			$sql = "SELECT firstName, lastName, rsvpStatus FROM ".ATTENDEES_TABLE." 
+			 	WHERE id IN (SELECT attendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE associatedAttendeeID = %d) 
+					OR id in (SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeID = %d)";
+		
+			$associations = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
+      if(count($associations) > 0) {
+  			foreach($associations as $a) {
+          $body .= "\r\n\r\n--== Associated Attendees ==--\r\n";
+          $body .= stripslashes($a->firstName." ".$a->lastName)." rsvp status: ".$a->rsvpStatus."\r\n";
+  			}
+      }
 						
 			wp_mail(get_option(OPTION_NOTIFY_EMAIL), "New RSVP Submission", $body);
 		}
@@ -743,7 +761,19 @@ function rsvp_handlersvp(&$output, &$text) {
 							
 				$body .= stripslashes($attendee[0]->firstName)." ".stripslashes($attendee[0]->lastName).
 								 " has submitted their RSVP and has RSVP'd with '".$attendee[0]->rsvpStatus."'.";
-							
+				
+  			$sql = "SELECT firstName, lastName, rsvpStatus FROM ".ATTENDEES_TABLE." 
+  			 	WHERE id IN (SELECT attendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE associatedAttendeeID = %d) 
+  					OR id in (SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeID = %d)";
+		
+  			$associations = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
+        if(count($associations) > 0) {
+          $body .= "\r\n\r\n--== Associated Attendees ==--\r\n";
+    			foreach($associations as $a) {
+            $body .= stripslashes($a->firstName." ".$a->lastName)." RSVP status: ".$a->rsvpStatus."\r\n";
+    			}
+        }
+						
 				wp_mail(get_option(OPTION_NOTIFY_EMAIL), "New RSVP Submission", $body);
 			}
 		}

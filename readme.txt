@@ -3,8 +3,8 @@ Contributors: mdedev
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=mikede%40mde%2ddev%2ecom&lc=US&item_name=Wordpress%20RSVP%20Plugin&no_note=0&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHostedGuest
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 3.0
-Tested up to: 3.8.0
-Stable tag: 1.7.3
+Tested up to: 3.8.1
+Stable tag: 1.7.4
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -15,6 +15,8 @@ in existing plugins was:
 
 * Couldn't relate attendees together so one person could easily rsvp for their whole family
 * Required people to remember/know some special knowledge (a code, a zipcode, etc...)
+
+**Please Note** - I don't monitor the forums for issues. If you would like some help or would like to see a new feature please email me at mike AT mde DASH dev.com. I will see what I can do to help.
 
 The admin functionality allows you to do the following things:
 
@@ -71,6 +73,11 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.7.4 = 
+* Fixed an issue with the table sorting for custom questions not working correctly
+* Added an the option to change the verbiage for the add additional guest question
+* When the email notification is sent now the associated attendees statuses are sent as well
 
 = 1.7.3 = 
 * Fixed some issues so notices would not surface
