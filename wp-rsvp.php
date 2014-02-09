@@ -2,7 +2,7 @@
 /**
  * @package rsvp
  * @author MDE Development, LLC
- * @version 1.7.4
+ * @version 1.7.5
  */
 /*
 Plugin Name: RSVP 
@@ -10,7 +10,7 @@ Text Domain: rsvp-plugin
 Plugin URI: http://wordpress.org/extend/plugins/rsvp/
 Description: This plugin allows guests to RSVP to an event.  It was made initially for weddings but could be used for other things.  
 Author: MDE Development, LLC
-Version: 1.7.4
+Version: 1.7.5
 Author URI: http://mde-dev.com
 License: GPL
 */
@@ -651,9 +651,15 @@ License: GPL
 			require_once("Excel/reader.php");
 			$data = new Spreadsheet_Excel_Reader();
 			$data->read($_FILES['importFile']['tmp_name']);
+      $skipFirstRow = false;
+      if($data->sheets[0]['numCols'] >= 6) {
+        // Associating private questions... have to skip the first row
+        $skipFirstRow = true;
+      }
 			if($data->sheets[0]['numCols'] >= 2) {
 				$count = 0;
-				for ($i = 1; $i <= $data->sheets[0]['numRows']; $i++) {
+        $i = ($skipFirstRow) ? 2 : 1;
+				for ($i; $i <= $data->sheets[0]['numRows']; $i++) {
 					$fName = trim($data->sheets[0]['cells'][$i][1]);
 					$lName = trim($data->sheets[0]['cells'][$i][2]);
 					$personalGreeting = (isset($data->sheets[0]['cells'][$i][4])) ? $personalGreeting = $data->sheets[0]['cells'][$i][4] : "";
@@ -675,7 +681,8 @@ License: GPL
 				
 				if($data->sheets[0]['numCols'] >= 3) {
 					// There must be associated users so let's associate them
-					for ($i = 1; $i <= $data->sheets[0]['numRows']; $i++) {
+          $i = ($skipFirstRow) ? 2 : 1;
+					for ($i; $i <= $data->sheets[0]['numRows']; $i++) {
 						$fName = trim($data->sheets[0]['cells'][$i][1]);
 						$lName = trim($data->sheets[0]['cells'][$i][2]);
 						if(!empty($fName) && !empty($lName) && (count($data->sheets[0]['cells'][$i]) >= 3)) {
@@ -720,7 +727,39 @@ License: GPL
 							}
 						}
 					}
-				}
+				} // if($data->sheets[0]['numCols'] >= 3)...
+        
+        if($data->sheets[0]['numCols'] >= 6) {
+          $private_questions = array();
+          for($qid = 6; $qid <= $data->sheets[0]['numCols']; $qid++) {
+            $pqid = str_replace("pq_", "", $data->sheets[0]['cells'][1][$qid]);
+            if(is_numeric($pqid)) {
+              $private_questions[$qid] = $pqid;
+            }
+          }
+          if(count($private_questions) > 0) {
+  					for ($i = 2; $i <= $data->sheets[0]['numRows']; $i++) {
+  						$fName = trim($data->sheets[0]['cells'][$i][1]);
+  						$lName = trim($data->sheets[0]['cells'][$i][2]);
+  						if(!empty($fName) && !empty($lName)) {
+  							// Get the user's id 
+  							$sql = "SELECT id FROM ".ATTENDEES_TABLE." 
+  							 	WHERE firstName = %s AND lastName = %s ";
+  							$res = $wpdb->get_results($wpdb->prepare($sql, $fName, $lName));
+  							if(count($res) > 0) {
+  								$userId = $res[0]->id;
+                  foreach($private_questions as $key => $val) {
+                    if(strToUpper($data->sheets[0]['cells'][$i][$key]) == "Y") {
+                      $wpdb->insert(QUESTION_ATTENDEES_TABLE, array("attendeeID" => $userId, 
+                                                                    "questionID" => $val), 
+                                                              array("%d", "%d"));
+                    }
+                  }
+                }
+              }
+            }
+          } // if(count($priv...))
+        } // if($data->sheets[0]['numCols'] >= 6)....
 			?>
 			<p><strong><?php echo $count; ?></strong> total records were imported.</p>
 			<p>Continue to the RSVP <a href="admin.php?page=rsvp-top-level">list</a></p>
@@ -731,12 +770,26 @@ License: GPL
 			<form name="rsvp_import" method="post" enctype="multipart/form-data">
 				<?php wp_nonce_field('rsvp-import'); ?>
 				<p>Select an excel file (only xls please, xlsx is not supported....yet) in the following format:<br />
-				<strong>First Name</strong> | <strong>Last Name</strong> | <strong>Associated Attendees*</strong> | <strong>Custom Message</strong> | <strong>Passcode</strong>
+				<strong>First Name</strong> | <strong>Last Name</strong> | <strong>Associated Attendees*</strong> | <strong>Custom Message</strong> | <strong>Passcode</strong> | <strong>Private Question Association**</strong>
 				</p>
 				<p>
 				* associated attendees should be separated by a comma it is assumed that the first space encountered will separate the first and last name.
 				</p>
-				<p>A header row is not expected.</p>
+        <p>
+          ** This can be multiple columns each column is associated with one of the following private questions. If you wish 
+          to have the guest associated with the question put a &quot;Y&quot; in the column otherwise put whatever else you want. The header name will be the &quot;private import key&quot; which is also listed below. It has the format of pq_* where * is a number.  
+          <ul>
+          <?php
+          $questions = $wpdb->get_results("SELECT id, question FROM ".QUESTIONS_TABLE." WHERE permissionLevel = 'private'");
+          foreach($questions as $q) {
+          ?>
+            <li><?php echo htmlspecialchars(stripslashes($q->question)); ?> - pq_<?php echo $q->id; ?></li>
+          <?php
+          }
+          ?>
+          </ul>
+        </p>
+				<p>A header row is not expected, UNLESS you are associating private questions.</p>
 				<p><input type="file" name="importFile" id="importFile" /></p>
 				<p><input type="submit" value="Import File" name="goRsvp" /></p>
 			</form>
@@ -959,7 +1012,7 @@ License: GPL
 			}
 		}
 		
-		$sql = "SELECT id, question, sortOrder FROM ".QUESTIONS_TABLE." ORDER BY sortOrder ASC";
+		$sql = "SELECT id, question, sortOrder, permissionLevel FROM ".QUESTIONS_TABLE." ORDER BY sortOrder ASC";
 		$customQs = $wpdb->get_results($sql);
 	?>
 		<script type="text/javascript" language="javascript">
@@ -1003,7 +1056,8 @@ License: GPL
 				<thead>
 					<tr>
 						<th scope="col" class="manage-column column-cb check-column" style=""><input type="checkbox" id="cb" /></th>
-						<th scope="col" id="questionCol" class="manage-column column-title" style="">Question</th>			
+						<th scope="col" id="questionCol" class="manage-column column-title" style="">Question</th>		
+            <th scope="col" class="manage-column column-title">Private Import Key</th>	
 					</tr>
 				</thead>
 			</table>
@@ -1019,6 +1073,13 @@ License: GPL
 								<a href="<?php echo get_option("siteurl"); ?>/wp-admin/admin.php?page=rsvp-admin-custom-question&amp;id=<?php echo $q->id; ?>"><?php echo htmlspecialchars(stripslashes($q->question)); ?></a>
 								<input type="hidden" name="sortOrder<?php echo $q->id; ?>" id="sortOrder<?php echo $q->id; ?>" value="<?php echo $q->sortOrder; ?>" />
 							</td>
+              <td><?php 
+                if($q->permissionLevel == "private") {
+                ?>
+                  pq_<?php echo $q->id; ?>
+              <?php
+                }
+                ?></td>
 						</tr>
 					<?php
 						$i++;
@@ -1215,6 +1276,12 @@ License: GPL
 								<option value="private" <?php echo ($permissionLevel == "private") ? " selected=\"selected\"" : ""; ?>>Private</option>
 							</select></td>
 						</tr>
+            <?php if(!$isNew && ($permissionLevel == "private")): ?>
+  						<tr>
+  							<th scope="row">Private Import Key:</th>
+  							<td align="left">pq_<?php echo $questionId; ?></td>
+  						</tr>
+            <?php endif;?>
 						<tr>
 							<td colspan="2">
 								<table cellpadding="0" cellspacing="0" border="0" id="answerContainer">

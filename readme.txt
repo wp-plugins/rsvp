@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=miked
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 3.0
 Tested up to: 3.8.1
-Stable tag: 1.7.4
+Stable tag: 1.7.5
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -73,6 +73,11 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.7.5 = 
+* Changed how RSVP'ing for associated guests work. You no longer have to select the checkbox but just select the RSVP option (yes or no) for the guest and it will assume you are RSVP'ing for the guest. 
+* Changed the default thank you message so it now has the main person's name for RSVP'ing and any additional people that were RSVP'd.
+* Made it possible to associate users with private question on import. See the import page for more details.
 
 = 1.7.4 = 
 * Fixed an issue with the table sorting for custom questions not working correctly

@@ -271,13 +271,10 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 		$form .= "<h3>".__("The following people are associated with you.  At this time you can RSVP for them as well.", 'rsvp-plugin')."</h3>";
 		foreach($associations as $a) {
       if($a->id != $attendeeID) {
-  			$form .= "<div class=\"rsvpAdditionalAttendee\">\r\n".
-  							RSVP_START_PARA."<label for=\"rsvpFor".$a->id."\">".
-                    sprintf(__("RSVP for %s ?",'rsvp-plugin'), htmlspecialchars($a->firstName." ".$a->lastName))."</label> ". 
-  									"<input type=\"checkbox\" name=\"rsvpFor".$a->id."\" id=\"rsvpFor".$a->id."\" value=\"Y\" />".RSVP_END_PARA;
+  			$form .= "<div class=\"rsvpAdditionalAttendee\">\r\n";
         $form .= "<div class=\"rsvpAdditionalAttendeeQuestions\">\r\n";
   			$form .= rsvp_BeginningFormField("", "").sprintf(__(" Will %s be attending?", 'rsvp-plugin'), htmlspecialchars($a->firstName)).
-                "<input type=\"radio\" name=\"attending".$a->id."\" value=\"Y\" id=\"attending".$a->id."Y\" checked=\"checked\" /> ".
+                "<input type=\"radio\" name=\"attending".$a->id."\" value=\"Y\" id=\"attending".$a->id."Y\" /> ".
                 "<label for=\"attending".$a->id."Y\">$yesText</label> 
   							<input type=\"radio\" name=\"attending".$a->id."\" value=\"N\" id=\"attending".$a->id."N\" /> ".
                 "<label for=\"attending".$a->id."N\">$noText</label>".
@@ -554,6 +551,8 @@ function rsvp_find(&$output, &$text) {
 
 function rsvp_handleNewRsvp(&$output, &$text) {
   global $wpdb, $rsvp_saved_form_vars;
+  $thankYouPrimary = "";
+  $thankYouAssociated = array();
   foreach($_POST as $key=>$val) {
     $rsvp_saved_form_vars[$key] = $val;
   }
@@ -569,7 +568,7 @@ function rsvp_handleNewRsvp(&$output, &$text) {
 	}
   $kidsMeal = ((isset($_POST['mainKidsMeal']) && (strToUpper($_POST['mainKidsMeal']) == "Y")) ? "Y" : "N");
   $veggieMeal = ((isset($_POST['mainVeggieMeal']) && (strToUpper($_POST['mainVeggieMeal']) == "Y")) ? "Y" : "N");
-	
+  $thankYouPrimary = $_POST['attendeeFirstName'];
 	$wpdb->insert(ATTENDEES_TABLE, array("rsvpDate" => date("Y-m-d"), 
                                        "firstName" => $_POST['attendeeFirstName'], 
                                        "lastName"  => $_POST['attendeeLastName'], 
@@ -592,18 +591,19 @@ function rsvp_handleNewRsvp(&$output, &$text) {
   
 	rsvp_handleAdditionalQuestions($attendeeID, "mainquestion");
 																			
-	$sql = "SELECT id FROM ".ATTENDEES_TABLE." 
+	$sql = "SELECT id, firstName FROM ".ATTENDEES_TABLE." 
 	 	WHERE (id IN (SELECT attendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE associatedAttendeeID = %d) 
 			OR id in (SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeID = %d)) 
 			 AND rsvpStatus = 'NoResponse'";
 	$associations = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
 	foreach($associations as $a) {
-		if($_POST['rsvpFor'.$a->id] == "Y") {
+		if(isset($_POST['attending'.$a->id]) && (($_POST['attending'.$a->id] == "Y") || ($_POST['attending'.$a->id] == "N"))) {
 			if($_POST['attending'.$a->id] == "Y") {
 				$rsvpStatus = "Yes";
 			} else {
 				$rsvpStatus = "No";
 			}
+      $thankYouAssociated[] = stripslashes($a->firstName);
 			$wpdb->update(ATTENDEES_TABLE, array("rsvpDate" => date("Y-m-d"), 
 							"rsvpStatus" => $rsvpStatus, 
 							"kidsMeal" => ((strToUpper((isset($_POST['attending'.$a->id.'KidsMeal']) ? $_POST['attending'.$a->id.'KidsMeal'] : "N")) == "Y") ? "Y" : "N"), 
@@ -621,7 +621,8 @@ function rsvp_handleNewRsvp(&$output, &$text) {
 			for($i = 1; $i <= $_POST['additionalRsvp']; $i++) {
 				if(($i <= 3) && 
 				   !empty($_POST['newAttending'.$i.'FirstName']) && 
-				   !empty($_POST['newAttending'.$i.'LastName'])) {									
+				   !empty($_POST['newAttending'.$i.'LastName'])) {		
+          $thankYouAssociated[] = $_POST['newAttending'.$i.'FirstName'];
 					$wpdb->insert(ATTENDEES_TABLE, array("firstName" => trim($_POST['newAttending'.$i.'FirstName']), 
 									"lastName" => trim($_POST['newAttending'.$i.'LastName']), 
 									"rsvpDate" => date("Y-m-d"), 
@@ -673,11 +674,13 @@ function rsvp_handleNewRsvp(&$output, &$text) {
 		}
 	}
 				
-	return rsvp_handle_output($text, rsvp_frontend_new_atendee_thankyou($rsvpPassword));
+	return rsvp_handle_output($text, rsvp_frontend_new_atendee_thankyou($thankYouPrimary, $thankYouAssociated, $rsvpPassword));
 }
 
 function rsvp_handlersvp(&$output, &$text) {
 	global $wpdb;
+  $thankYouPrimary = "";
+  $thankYouAssociated = array();
 	if(is_numeric($_POST['attendeeID']) && ($_POST['attendeeID'] > 0)) {
 		// update their information and what not....
 		if(strToUpper($_POST['mainRsvp']) == "Y") {
@@ -686,6 +689,9 @@ function rsvp_handlersvp(&$output, &$text) {
 			$rsvpStatus = "No";
 		}
 		$attendeeID = $_POST['attendeeID'];
+    // Get Attendee first name
+    $thankYouPrimary = $wpdb->get_var($wpdb->prepare("SELECT firstName FROM ".ATTENDEES_TABLE." WHERE id = %d", $attendeeID));
+    
 		$wpdb->update(ATTENDEES_TABLE, array("rsvpDate" => date("Y-m-d"), 
 						"rsvpStatus" => $rsvpStatus, 
 						"note" => $_POST['rsvp_note'], 
@@ -697,13 +703,14 @@ function rsvp_handlersvp(&$output, &$text) {
 		rsvp_printQueryDebugInfo();									
 		rsvp_handleAdditionalQuestions($attendeeID, "mainquestion");
 																				
-		$sql = "SELECT id FROM ".ATTENDEES_TABLE." 
+		$sql = "SELECT id, firstName FROM ".ATTENDEES_TABLE." 
 		 	WHERE (id IN (SELECT attendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE associatedAttendeeID = %d) 
 				OR id in (SELECT associatedAttendeeID FROM ".ASSOCIATED_ATTENDEES_TABLE." WHERE attendeeID = %d)) 
 				 AND rsvpStatus = 'NoResponse'";
 		$associations = $wpdb->get_results($wpdb->prepare($sql, $attendeeID, $attendeeID));
 		foreach($associations as $a) {
-			if($_POST['rsvpFor'.$a->id] == "Y") {
+      if(isset($_POST['attending'.$a->id]) && (($_POST['attending'.$a->id] == "Y") || ($_POST['attending'.$a->id] == "N"))) {
+        $thankYouAssociated[] = $a->firstName;
 				if($_POST['attending'.$a->id] == "Y") {
 					$rsvpStatus = "Yes";
 				} else {
@@ -726,7 +733,8 @@ function rsvp_handlersvp(&$output, &$text) {
 				for($i = 1; $i <= $_POST['additionalRsvp']; $i++) {
 					if(($i <= 3) && 
 					   !empty($_POST['newAttending'.$i.'FirstName']) && 
-					   !empty($_POST['newAttending'.$i.'LastName'])) {									
+					   !empty($_POST['newAttending'.$i.'LastName'])) {		
+            $thankYouAssociated[] = $_POST['newAttending'.$i.'FirstName'];
 						$wpdb->insert(ATTENDEES_TABLE, array("firstName" => trim($_POST['newAttending'.$i.'FirstName']), 
 										"lastName" => trim($_POST['newAttending'.$i.'LastName']), 
 										"rsvpDate" => date("Y-m-d"), 
@@ -778,7 +786,7 @@ function rsvp_handlersvp(&$output, &$text) {
 			}
 		}
 					
-		return rsvp_handle_output($text, frontend_rsvp_thankyou());
+		return rsvp_handle_output($text, frontend_rsvp_thankyou($thankYouPrimary, $thankYouAssociated));
 	} else {
 		return rsvp_handle_output($text, rsvp_frontend_greeting());
 	}
@@ -834,27 +842,53 @@ function rsvp_foundAttendee(&$output, &$text) {
 	
 	
 
-function frontend_rsvp_thankyou() {
+function frontend_rsvp_thankyou($thankYouPrimary, $thankYouAssociated) {
 	$customTy = get_option(OPTION_THANKYOU);
 	if(!empty($customTy)) {
 		return nl2br($customTy);
-	} else {
-		return RSVP_START_CONTAINER.RSVP_START_PARA.__("Thank you for RSVPing", 'rsvp-plugin').RSVP_END_PARA.RSVP_END_CONTAINER;
+	} else {    
+    $tyText = __("Thank you", 'rsvp-plugin');
+    if(!empty($thankYouPrimary)) {
+      $tyText .= " ".htmlspecialchars($thankYouPrimary);
+    }
+    $tyText .= __(" for RSVPing.", 'rsvp-plugin');
+    
+    if(count($thankYouAssociated) > 0) {
+      $tyText .= __(" You have also RSVPed for - ", 'rsvp-plugin');
+      foreach($thankYouAssociated as $name) {
+        $tyText .= htmlspecialchars(" ".$name).", ";
+      }
+      $tyText = rtrim(trim($tyText), ",").".";
+    }
+		return RSVP_START_CONTAINER.RSVP_START_PARA.$tyText.RSVP_END_PARA.RSVP_END_CONTAINER;
 	}
 }
 
-function rsvp_frontend_new_atendee_thankyou($password = "") {
+function rsvp_frontend_new_atendee_thankyou($thankYouPrimary, $thankYouAssociated, $password = "") {
 	/*$customTy = get_option(OPTION_THANKYOU);
 	if(!empty($customTy)) {
 		return nl2br($customTy);
 	} else {*/
-    $thankYouText = "Thank you for RSVPing. To modify your RSVP just come back ".
-                    "to this page and enter in your first and last name.";
+    $thankYouText = __("Thank you ", 'rsvp-plugin');
+    if(!empty($thankYouPrimary)) {
+      $thankYouText .= htmlspecialchars($thankYouPrimary);
+    }
+    $thankYouText .= __(" for RSVPing. To modify your RSVP just come back ".
+                    "to this page and enter in your first and last name.", 'rsvp-plugin');
     if(!empty($password)) {
-      $thankYouText .= " You will also need to know your password which is - <strong>$password</strong>";
+      $thankYouText .= __(" You will also need to know your password which is", 'rsvp-plugin').
+                      " - <strong>$password</strong>";
+    }
+    
+    if(count($thankYouAssociated) > 0) {
+      $thankYouText .= __("<br /><br />You have also RSVPed for - ", 'rsvp-plugin');
+      foreach($thankYouAssociated as $name) {
+        $thankYouText .= htmlspecialchars(" ".$name).", ";
+      }
+      $thankYouText = rtrim(trim($thankYouText), ",").".";
     }
 
-		return RSVP_START_CONTAINER.RSVP_START_PARA.__($thankYouText, 'rsvp-plugin').RSVP_END_PARA.RSVP_END_CONTAINER;
+		return RSVP_START_CONTAINER.RSVP_START_PARA.$thankYouText.RSVP_END_PARA.RSVP_END_CONTAINER;
 	//}
 }
 
