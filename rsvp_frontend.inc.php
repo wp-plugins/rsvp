@@ -273,7 +273,7 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
       if($a->id != $attendeeID) {
   			$form .= "<div class=\"rsvpAdditionalAttendee\">\r\n";
         $form .= "<div class=\"rsvpAdditionalAttendeeQuestions\">\r\n";
-  			$form .= rsvp_BeginningFormField("", "").sprintf(__(" Will %s be attending?", 'rsvp-plugin'), htmlspecialchars($a->firstName)).
+  			$form .= rsvp_BeginningFormField("", "").RSVP_START_PARA.sprintf(__(" Will %s be attending?", 'rsvp-plugin'), htmlspecialchars($a->firstName)).RSVP_END_FORM_FIELD.
                 "<input type=\"radio\" name=\"attending".$a->id."\" value=\"Y\" id=\"attending".$a->id."Y\" /> ".
                 "<label for=\"attending".$a->id."Y\">$yesText</label> 
   							<input type=\"radio\" name=\"attending".$a->id."\" value=\"N\" id=\"attending".$a->id."N\" /> ".
@@ -286,7 +286,8 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 			
   			if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
   				$form .= rsvp_BeginningFormField("", "").
-            sprintf(__("Does %s need a kids meal?", 'rsvp-plugin'), htmlspecialchars($a->firstName))."&nbsp; ".
+            RSVP_START_PARA.sprintf(__("Does %s need a kids meal?", 'rsvp-plugin'), htmlspecialchars($a->firstName)).
+              RSVP_END_PARA."&nbsp; ".
             "<input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"Y\" id=\"attending".$a->id."KidsMealY\" /> ".
   					"<label for=\"attending".$a->id."KidsMealY\">$yesText</label> 
   					<input type=\"radio\" name=\"attending".$a->id."KidsMeal\" value=\"N\" id=\"attending".$a->id."KidsMealN\" checked=\"checked\" /> ".
@@ -295,7 +296,8 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 			
   			if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
   				$form .= rsvp_BeginningFormField("", "").
-                  sprintf(__("Does %s need a vegetarian meal?", 'rsvp-plugin'), htmlspecialchars($a->firstName))."&nbsp; ".
+                  RSVP_START_PARA.sprintf(__("Does %s need a vegetarian meal?", 'rsvp-plugin'), htmlspecialchars($a->firstName)).
+                    RSVP_END_FORM_FIELD."&nbsp; ".
       						"<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"Y\" id=\"attending".$a->id."VeggieMealY\" /> ".
       						"<label for=\"attending".$a->id."VeggieMealY\">$yesText</label> 
       						<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"N\" id=\"attending".$a->id."VeggieMealN\" checked=\"checked\" /> ".
@@ -347,14 +349,14 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 													\"  <input type=\\\"text\\\" name=\\\"newAttending\" + numAdditional + \"LastName\\\" id=\\\"newAttending\" + numAdditional + \"LastName\\\" />\" + \r\n
                         \"</div>\" + \r\n
 										  	\"<div class=\\\"rsvpFormField\\\">\" + \r\n
-														\"Will this person be attending?&nbsp;\" + \r\n
+														\"<p>Will this person be attending?</p>\" + \r\n
 														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"Y\\\" checked=\\\"checked\\\" /> \" + 
 														\"<label for=\\\"newAttending\" + numAdditional + \"Y\\\">$yesText</label> \" + 
 														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"N\\\"> <label for=\\\"newAttending\" + numAdditional + \"N\\\">$noText</label>\" + 
 													\"</div>\" + \r\n";
 												if(get_option(OPTION_HIDE_KIDS_MEAL) != "Y") {		
 													$form .= "\"<div class=\\\"rsvpFormField\\\">\" + 
-                          \"".__("Does this person need a kids meal?", 'rsvp-plugin')."&nbsp; \" + 
+                          \"<p>".__("Does this person need a kids meal?", 'rsvp-plugin')."</p>\" + 
 														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealY\\\" /> \" + 
 														\"<label for=\\\"newAttending\" + numAdditional + \"KidsMealY\\\">$yesText</label> \" + 
 														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"KidsMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"KidsMealN\\\" checked=\\\"checked\\\" /> \" + 
@@ -364,7 +366,7 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 												}
 												if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
 													$form .= "\"<div class=\\\"rsvpFormField\\\">\" + \r\n
-                          \"".__("Does this person need a vegetarian meal?", 'rsvp-plugin')."&nbsp; \" + 
+                          \"<p>".__("Does this person need a vegetarian meal?", 'rsvp-plugin')."</p>\" + 
 														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"Y\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\" /> \" + 
 														\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealY\\\">$yesText</label> \" + 
 														\"<input type=\\\"radio\\\" name=\\\"newAttending\" + numAdditional + \"VeggieMeal\\\" value=\\\"N\\\" id=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\" checked=\\\"checked\\\" /> \" + 
@@ -374,10 +376,18 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 												$tmpVar = str_replace("\r\n", "", str_replace("|", "\"", addSlashes(rsvp_buildAdditionalQuestions(0, "| + numAdditional + |"))));
 												
 												$form .= "\"".$tmpVar."\" + 
+                          \"<p><button onclick=\\\"removeAdditionalRSVP(this);\\\">Remove Guest</button></p>\" + 
 											\"</div>\");
 										jQuery(\"#additionalRsvp\").val(numAdditional);
 									}
 								}
+                
+                function removeAdditionalRSVP(rsvp) {
+									var numAdditional = jQuery(\"#additionalRsvp\").val();
+									numAdditional--;
+                  jQuery(rsvp).parent().parent().remove();
+                  jQuery(\"#additionalRsvp\").val(numAdditional);
+                }
 							</script>\r\n";
 	}
 	$form .= "</form>\r\n";
