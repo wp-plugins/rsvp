@@ -273,7 +273,7 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
       if($a->id != $attendeeID) {
   			$form .= "<div class=\"rsvpAdditionalAttendee\">\r\n";
         $form .= "<div class=\"rsvpAdditionalAttendeeQuestions\">\r\n";
-  			$form .= rsvp_BeginningFormField("", "").RSVP_START_PARA.sprintf(__(" Will %s be attending?", 'rsvp-plugin'), htmlspecialchars($a->firstName)).RSVP_END_FORM_FIELD.
+  			$form .= rsvp_BeginningFormField("", "").RSVP_START_PARA.sprintf(__(" Will %s be attending?", 'rsvp-plugin'), htmlspecialchars($a->firstName)).RSVP_END_PARA.
                 "<input type=\"radio\" name=\"attending".$a->id."\" value=\"Y\" id=\"attending".$a->id."Y\" /> ".
                 "<label for=\"attending".$a->id."Y\">$yesText</label> 
   							<input type=\"radio\" name=\"attending".$a->id."\" value=\"N\" id=\"attending".$a->id."N\" /> ".
@@ -297,7 +297,7 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
   			if(get_option(OPTION_HIDE_VEGGIE) != "Y") {		
   				$form .= rsvp_BeginningFormField("", "").
                   RSVP_START_PARA.sprintf(__("Does %s need a vegetarian meal?", 'rsvp-plugin'), htmlspecialchars($a->firstName)).
-                    RSVP_END_FORM_FIELD."&nbsp; ".
+                    RSVP_END_PARA."&nbsp; ".
       						"<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"Y\" id=\"attending".$a->id."VeggieMealY\" /> ".
       						"<label for=\"attending".$a->id."VeggieMealY\">$yesText</label> 
       						<input type=\"radio\" name=\"attending".$a->id."VeggieMeal\" value=\"N\" id=\"attending".$a->id."VeggieMealN\" checked=\"checked\" /> ".
@@ -649,10 +649,10 @@ function rsvp_handleNewRsvp(&$output, &$text) {
 										"associatedAttendeeID" => $attendeeID), 
 										array("%d", "%d"));
 					rsvp_printQueryDebugInfo();
-					$wpdb->query($wpdb->prepare("INSERT INTO ".ASSOCIATED_ATTENDEES_TABLE."(attendeeID, associatedAttendeeID)
+					$wpdb->query("INSERT INTO ".ASSOCIATED_ATTENDEES_TABLE."(attendeeID, associatedAttendeeID)
 																			 SELECT ".$newAid.", associatedAttendeeID 
 																			 FROM ".ASSOCIATED_ATTENDEES_TABLE." 
-																			 WHERE attendeeID = ".$attendeeID));
+																			 WHERE attendeeID = ".$attendeeID);
 					rsvp_printQueryDebugInfo();
 				}
 			}
