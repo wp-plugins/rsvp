@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=miked
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 3.0
 Tested up to: 3.8.1
-Stable tag: 1.7.7
+Stable tag: 1.7.8
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -73,6 +73,9 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.7.8 = 
+* Changed it so the first and last name are displayed in the question "Will X be attending?" where X is the person's name. It used to only display the person's first name. 
 
 = 1.7.7 = 
 * Small layout bugfixes that were introduced in 1.7.6
