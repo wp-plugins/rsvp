@@ -373,7 +373,7 @@ function rsvp_frontend_main_form($attendeeID, $rsvpStep = "handleRsvp") {
 														\"<label for=\\\"newAttending\" + numAdditional + \"VeggieMealN\\\">$noText</label>\" + 
 													\"</div>\" + ";
 												}
-												$tmpVar = str_replace("\r\n", "", str_replace("|", "\"", addSlashes(rsvp_buildAdditionalQuestions(0, "| + numAdditional + |"))));
+												$tmpVar = str_replace("\r\n", "", str_replace("|", "\"", addSlashes(rsvp_buildAdditionalQuestions($attendeeID, "| + numAdditional + |"))));
 												
 												$form .= "\"".$tmpVar."\" + 
                           \"<p><button onclick=\\\"removeAdditionalRSVP(this);\\\">Remove Guest</button></p>\" + 
