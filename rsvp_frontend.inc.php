@@ -11,6 +11,7 @@ $rsvp_saved_form_vars['rsvp_note'] = "";
 
 function rsvp_handle_output ($intialText, $rsvpText) {	
   $rsvpText = "<a name=\"rsvpArea\" id=\"rsvpArea\"></a>".$rsvpText;
+  remove_filter("the_content", "wpautop");
 	return str_replace(RSVP_FRONTEND_TEXT_CHECK, $rsvpText, $intialText);
 }
 
@@ -410,7 +411,7 @@ function rsvp_revtrievePreviousAnswer($attendeeID, $questionID) {
 
 function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 	global $wpdb, $rsvp_saved_form_vars;
-	$output = "";
+	$output = "<div class=\"rsvpCustomQuestions\">";
 	
 	$sql = "SELECT q.id, q.question, questionType FROM ".QUESTIONS_TABLE." q 
 					INNER JOIN ".QUESTION_TYPE_TABLE." qt ON qt.id = q.questionTypeID 
@@ -475,7 +476,7 @@ function rsvp_buildAdditionalQuestions($attendeeID, $prefix) {
 		}
 	}
 	
-	return $output;
+	return $output."</div>";
 }
 
 function rsvp_find(&$output, &$text) {

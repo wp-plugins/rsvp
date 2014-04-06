@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=miked
 Tags: rsvp, reserve, wedding, guestlist
 Requires at least: 3.0
 Tested up to: 3.8.1
-Stable tag: 1.7.9
+Stable tag: 1.8.0
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -51,6 +51,7 @@ Available CSS Stylings:
 * rsvpCheckboxCustomQ - Class for the div that surrounds each custom question checkbox 
 * rsvpClear - A class for div elements that we want to use to set clear both. Currently used only next to rsvpCheckboxCustomQs as they are floated
 * rsvpAdditionalAttendeeQuestions - Class name for the div that wraps around all additional attendee questions
+* rsvpCustomQuestions - Class name for the div that wraps around all custom questions for each attendee
 
 == Installation ==
 
@@ -73,6 +74,10 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 1.8.0 = 
+* Added in rsvpCustomQuestions as a div container for custom questions to help with styling
+* Added in a fix to stop auto newlines from paragraphs from happening on older versions of Wordpress. I remove wpautop from the_content filter when RSVP content is found. 
 
 = 1.7.9 = 
 * Fixed an issue reported by a user where the private custom questions did not get included with a new additional attendee
