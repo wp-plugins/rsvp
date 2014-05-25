@@ -4,15 +4,15 @@
 	if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
 		$sql = "CREATE TABLE ".$table." (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-		`firstName` VARCHAR( 100 ) NOT NULL ,
-		`lastName` VARCHAR( 100 ) NOT NULL ,
+		`firstName` VARCHAR( 100 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL ,
+		`lastName` VARCHAR( 100 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL ,
 		`rsvpDate` DATE NULL ,
 		`rsvpStatus` ENUM( 'Yes', 'No', 'NoResponse' ) NOT NULL DEFAULT 'NoResponse',
-		`note` TEXT NULL,
+		`note` TEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL,
 		`kidsMeal` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N',
 		`additionalAttendee` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N',
 		`veggieMeal` ENUM( 'Y', 'N' ) NOT NULL DEFAULT 'N', 
-		`personalGreeting` TEXT NOT NULL 
+		`personalGreeting` TEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL 
 		);";
 		$wpdb->query($sql);
 	}
@@ -32,7 +32,7 @@
 	
 	if((int)$installed_ver < 2) {
 		$table = $wpdb->prefix."attendees";
-		$sql = "ALTER TABLE ".$table." ADD `personalGreeting` TEXT NOT NULL ;";
+		$sql = "ALTER TABLE ".$table." ADD `personalGreeting` TEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL ;";
 		$wpdb->query($sql);
 		update_option( "rsvp_db_version", RSVP_DB_VERSION);
 	}
@@ -48,7 +48,7 @@
 	if($wpdb->get_var("SHOW TABLES LIKE '$table'") != $table) {
 		$sql = " CREATE TABLE $table (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-		`question` MEDIUMTEXT NOT NULL ,
+		`question` MEDIUMTEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL ,
 		`questionTypeID` INT NOT NULL, 
 		`sortOrder` INT NOT NULL DEFAULT '99', 
 		`permissionLevel` ENUM( 'public', 'private' ) NOT NULL DEFAULT 'public'
@@ -79,7 +79,7 @@
 		$sql = "CREATE TABLE $table (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 		`questionID` INT NOT NULL, 
-		`answer` MEDIUMTEXT NOT NULL
+		`answer` MEDIUMTEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
 		);";
 		$wpdb->query($sql);
 	}
@@ -89,7 +89,7 @@
 		$sql = "CREATE TABLE $table (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 		`questionID` INT NOT NULL, 
-		`answer` MEDIUMTEXT NOT NULL, 
+		`answer` MEDIUMTEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL, 
 		`attendeeID` INT NOT NULL 
 		);";
 		$wpdb->query($sql);
@@ -106,7 +106,7 @@
 	}
 	
 	if((int)$installed_ver < 5) {
-		$table = QUESTIONS_TABLE;
+		$table = $wpdb->prefix."rsvpCustomQuestions";
 		$sql = "ALTER TABLE `$table` ADD `permissionLevel` ENUM( 'public', 'private' ) NOT NULL DEFAULT 'public';";
 		$wpdb->query($sql);
 	}
@@ -114,5 +114,12 @@
 	if((int)$installed_ver < 9) {
 		rsvp_install_passcode_field();
 	}
+  
+  $table = $wpdb->prefix."attendees";
+  if((int)$installed_ver < 11 || ($wpdb->get_var("SHOW COLUMNS FROM `$table` LIKE 'email'") != "email")) {
+		$sql = "ALTER TABLE ".$table." ADD `email` VARCHAR( 250 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL;";
+		$wpdb->query($sql);
+		update_option( "rsvp_db_version", RSVP_DB_VERSION);
+  }
 	update_option( "rsvp_db_version", RSVP_DB_VERSION);
 ?>
