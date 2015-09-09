@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=miked
 Tags: rsvp, reserve, wedding, guestlist, attendee management
 Requires at least: 3.0
 Tested up to: 4.3.0
-Stable tag: 2.1.2
+Stable tag: 2.1.3
 
 Easy to use rsvp plugin originally created for weddings but could be used for other events.
 
@@ -18,7 +18,7 @@ in existing plugins was:
 
 **Please Note** - I don't monitor the forums for issues. If you would like some help or would like to see a new feature please email me at mike AT mde DASH dev.com. I will see what I can do to help.
 
-**All new features are being developed in the pro version of the plugin, found at - http://www.swimordiesoftware.com/downloads/rsvp-pro-plugin/. We will continue to do bug fixes on the free version but new features will more than likely not be found in the free plugin**
+**All new features are being developed in the pro version of the plugin, found at - https://www.rsvpforwordpress.com/downloads/rsvp-pro-plugin/. We will continue to do bug fixes on the free version but new features will more than likely not be found in the free plugin**
 
 The main development repository for this plugin is now on GitHub at https://github.com/medelibero/Wordpress-RSVP-Plugin/
 
@@ -88,6 +88,9 @@ I will see if I can get it added for you.
 1. The text you need to add for the rsvp front-end
 
 == Changelog ==
+
+= 2.1.3 = 
+* Resurfaced the note field on the admin attendee list screen
 
 = 2.1.2 = 
 * Incremented the tested version to 4.3.0
